@@ -2,6 +2,7 @@ UV := uv
 SRC := src
 DEB := pdb
 PY := $(UV) run python3
+ARGS ?= --map-path=maps/easy/01_linear_path.txt
 
 install: .venv/.installed
 
@@ -10,7 +11,10 @@ install: .venv/.installed
 	@touch $@
 
 run: .venv/.installed
-	$(PY) -m $(SRC)
+	$(PY) -m $(SRC) $(ARGS)
+
+test: .venv/.installed
+	$(PY) -m pytest -v
 
 debug: .venv/.installed
 	$(PY) -m $(DEB) -m $(SRC)
@@ -26,8 +30,8 @@ fclean: clean
 re: fclean install
 
 lint: .venv/.installed
-	$(UV) run flake8 .
-	$(UV) run mypy . \
+	$(UV) run flake8 $(SRC)
+	$(UV) run mypy $(SRC) \
 	    --warn-return-any \
 		--warn-unused-ignores \
 		--ignore-missing-imports \

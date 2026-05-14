@@ -1,5 +1,6 @@
 def main():
-    print("Hello from flyin!")
+    key, val = "keyfdfdf=valuddddde".split("=")
+    print(key, val)
 
 
 if __name__ == "__main__":
