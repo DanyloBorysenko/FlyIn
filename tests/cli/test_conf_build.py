@@ -22,3 +22,8 @@ def test_map_flag() -> None:
 def test_debug_flag() -> None:
     app = build_app_config(["filename", "--debug"])
     assert app.debug is True
+
+
+def test_debug_flag_with_val() -> None:
+    with pytest.raises(AppConfigError):
+        build_app_config(["filename", "--debug=False"])
