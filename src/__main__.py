@@ -1,13 +1,17 @@
 import sys
 from src.cli import build_app_config
 from src.cli import AppConfigError
-# from src.cli.models import AppConfig
+from src.parser import MapParser
 
 
 def main() -> None:
     try:
         app_config = build_app_config(sys.argv)
-        print(app_config)
+        if app_config.debug:
+            print(f"AppConfig was created: {app_config}")
+        parser = MapParser(app_config)
+        parser.parse()
+        MapParser(None).parse()
     except AppConfigError as e:
         print(f"{e.__class__.__name__}: {e}", file=sys.stderr)
         sys.exit(1)
