@@ -1,7 +1,7 @@
 import sys
 from src.cli import build_app_config
 from src.cli import AppConfigError
-from src.parser import MapParser
+from src.parser import MapParser, ParserError
 
 
 def main() -> None:
@@ -11,8 +11,10 @@ def main() -> None:
             print(f"AppConfig was created: {app_config}")
         parser = MapParser(app_config)
         parser.parse()
-        MapParser(None).parse()
     except AppConfigError as e:
+        print(f"{e.__class__.__name__}: {e}", file=sys.stderr)
+        sys.exit(1)
+    except ParserError as e:
         print(f"{e.__class__.__name__}: {e}", file=sys.stderr)
         sys.exit(1)
 
