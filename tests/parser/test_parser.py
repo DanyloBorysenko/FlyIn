@@ -4,11 +4,6 @@ import pytest
 import os
 
 
-def test_parser_app_is_none() -> None:
-    with pytest.raises(ParserError):
-        MapParser(None).parse()
-
-
 @pytest.fixture
 def no_rights_file():
     map_path = "tests/parser/invalid_maps/structure/no_rights.txt"

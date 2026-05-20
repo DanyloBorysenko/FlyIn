@@ -1,6 +1,9 @@
 def main():
-    key, val = "keyfdfdf=valuddddde".split("=")
-    print(key, val)
+    try:
+        i: int = int("dfsd")
+    except ValueError as e:
+        raise RuntimeError(f"{e}")
+    print(i)
 
 
 if __name__ == "__main__":

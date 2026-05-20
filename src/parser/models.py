@@ -19,7 +19,7 @@ class ZoneType(Enum):
     PRIORITY = "priority"
 
 
-class ZoneMeta(Enum):
+class ZoneMetaKey(Enum):
     ZONE = "zone"
     COLOR = "color"
     MAX_DRONES = "max_drones"
@@ -33,9 +33,8 @@ class ParsedElement(ABC):
     pass
 
 
-@dataclass
+@dataclass(frozen=True)
 class ParsedNbDrones(ParsedElement):
-    kind: ParsedKeyword.NB_DRONES
     drones_count: int
 
 
@@ -47,13 +46,12 @@ class ParsedHub(ParsedElement):
     name: str
     coord_x: int
     coord_y: int
-    type: ZoneType
-    metadata: Dict[ZoneMeta, str]
+    zone_type: ZoneType
+    metadata: Dict
 
 
 @dataclass(frozen=True)
 class ParsedConnection(ParsedElement):
-    kind: ParsedKeyword.CONNECTION
     zone1: str
     zone2: str
-    metadata: Dict[ConnectionMeta, str]
+    metadata: Dict
