@@ -25,7 +25,7 @@ class ZoneMetaKey(Enum):
     MAX_DRONES = "max_drones"
 
 
-class ConnectionMeta(Enum):
+class ConnectionMetaKey(Enum):
     MAX_LINK_CAP = "max_link_capacity"
 
 
@@ -47,11 +47,11 @@ class ParsedHub(ParsedElement):
     coord_x: int
     coord_y: int
     zone_type: ZoneType
-    metadata: Dict
+    metadata: Dict | None
 
 
 @dataclass(frozen=True)
 class ParsedConnection(ParsedElement):
     zone1: str
     zone2: str
-    metadata: Dict
+    metadata: Dict | None
