@@ -1,9 +1,11 @@
+from src.parser.errors import ParserError
+
+
 def main():
     try:
-        i: int = int("dfsd")
-    except ValueError as e:
-        raise RuntimeError(f"{e}")
-    print(i)
+        raise ParserError("msg", 1)
+    except ParserError as e:
+        print(e)
 
 
 if __name__ == "__main__":

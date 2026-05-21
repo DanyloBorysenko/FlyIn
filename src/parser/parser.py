@@ -1,6 +1,8 @@
 from typing import List, Dict
 from src.cli import AppConfig
-from .models import ParsedElement, ParsedKeyword, ParsedNbDrones, ParsedHub, ParsedConnection, ZoneType, ZoneMetaKey, ConnectionMetaKey
+from .models import (ParsedElement, ParsedKeyword, ParsedNbDrones, ParsedHub,
+                     ParsedConnection, ZoneType, ZoneMetaKey,
+                     ConnectionMetaKey)
 from .errors import ParserError
 
 
@@ -12,27 +14,27 @@ class MapParser:
                          line_els: List[str],
                          line_ind: int) -> ParsedNbDrones:
         if (len(line_els) < 2):
-            raise ParserError(f"No drones count. Line: {line_ind}")
+            raise ParserError("No drones count", line_ind)
         try:
             return ParsedNbDrones(int(line_els[1]))
         except ValueError:
-            raise ParserError(f"'{line_els[1]}' is not integer. "
-                              f"Line: {line_ind}")
+            raise ParserError(f"'{line_els[1]}' is not integer",
+                              line_ind)
 
     def _parse_hub(self,
                    line_els: List[str],
                    line_ind: int) -> ParsedElement:
         if len(line_els) < 4:
             raise ParserError("Hub needs 4 line elements min. "
-                              f"Was {len(line_els)}. Line: {line_ind}")
+                              f"Was {len(line_els)}", line_ind)
         try:
             coord_x = int(line_els[2])
         except ValueError:
-            raise ParserError(f"Coord x must be integer. Line: {line_ind}")
+            raise ParserError("Coord x must be integer", line_ind)
         try:
             coord_y = int(line_els[3])
         except ValueError:
-            raise ParserError(f"Coord y must be integer. Line: {line_ind}")
+            raise ParserError("Coord y must be integer", line_ind)
         if len(line_els) == 4:
             meta = None
         else:
@@ -51,16 +53,54 @@ class MapParser:
                 metadata=meta)
                 )
 
+    def _parse_hub_meta(self, meta_els: List[str], line_ind: int) -> Dict:
+        self._check_brackets(meta_els, line_ind)
+        meta_els[0] = meta_els[0].removeprefix("[")
+        meta_els[-1] = meta_els[-1].removesuffix("]")
+        meta = {}
+        for el in meta_els:
+            key_val: List[str] = el.split("=")
+            if len(key_val) != 2:
+                raise ParserError(f"Wrong meta structure in '{el}'",
+                                  line_ind)
+            try:
+                key = ZoneMetaKey(key_val[0])
+            except ValueError:
+                raise ParserError(f"Unknown meta key '{key_val[0]}'",
+                                  line_ind)
+            if key == ZoneMetaKey.ZONE:
+                try:
+                    val = ZoneType(key_val[1])
+                except ValueError:
+                    raise ParserError(f"Unknown zone type '{key_val[1]}'",
+                                      line_ind)
+            elif key == ZoneMetaKey.MAX_DRONES:
+                try:
+                    val = int(key_val[1])
+                except ValueError:
+                    raise ParserError(f"Value '{key_val[1]}' must be integer.",
+                                      line_ind)
+            else:
+                val = key_val[1]
+                if "," in val:
+                    raise ParserError(f"Value for meta key '{key}' "
+                                      f"contains ','.", line_ind)
+            if key in meta:
+                raise ParserError(f"Duplicate meta key '{key}'.",
+                                  line_ind)
+            meta[key] = val
+        return meta
+
     def _parse_connection(self,
                           line_els: List[str],
                           line_ind: int) -> ParsedElement:
         if len(line_els) < 2:
             raise ParserError("Connection needs 2 line elements min. "
-                              f"Was {len(line_els)}. Line: {line_ind}")
+                              f"Was {len(line_els)}.", line_ind)
         zone1_zone2: List[str] = line_els[1].split("-")
         if len(zone1_zone2) != 2:
-            raise ParserError(f"Wrong connection structure in '{zone1_zone2}'."
-                              f" Line: {line_ind}")
+            raise ParserError(f"Wrong connection structure in '{zone1_zone2}'",
+                              line_ind)
         meta: Dict | None = None
         if len(line_els) > 2:
             meta = self._parse_connection_meta(line_els[2:], line_ind)
@@ -76,75 +116,37 @@ class MapParser:
         for el in meta_els:
             key_val = el.split("=")
             if len(key_val) != 2:
-                raise ParserError(f"Wrong meta structure in '{el}'. "
-                                  f"Line: {line_ind}")
+                raise ParserError(f"Wrong meta structure in '{el}'.", line_ind)
             try:
                 key = ConnectionMetaKey(key_val[0])
             except ValueError:
-                raise ParserError(f"Unknown meta key '{key_val[0]}'. "
-                                  f"Line: {line_ind}")
+                raise ParserError(f"Unknown meta key '{key_val[0]}'.",
+                                  line_ind)
             if key in meta:
-                raise ParserError(f"Duplicate meta key '{key}'. "
-                                  f"Line: {line_ind}")
+                raise ParserError(f"Duplicate meta key '{key}'.", line_ind)
             try:
                 val = int(key_val[1])
             except ValueError:
                 raise ParserError(f"Value for the key {key.value} "
-                                  f"must be integer, but was {key_val[1]}."
-                                  f" Line {line_ind}")
+                                  f"must be integer, but was {key_val[1]}.",
+                                  line_ind)
             meta[key] = val
-            return meta
+        return meta
 
     def _check_brackets(self, meta_els: List[str], line_ind: int) -> None:
         if not meta_els[0].startswith("["):
-            raise ParserError("Metadata must start with '['. "
-                              f"Line: {line_ind}")
+            raise ParserError("Metadata must start with '['.", line_ind)
         if not meta_els[-1].endswith("]"):
-            raise ParserError("Metadata must end with ']'. "
-                              f"Line: {line_ind}")
-
-    def _parse_hub_meta(self, meta_els: List[str], line_ind: int) -> Dict:
-        self._check_brackets(meta_els, line_ind)
-        meta_els[0] = meta_els[0].removeprefix("[")
-        meta_els[-1] = meta_els[-1].removesuffix("]")
-        meta = {}
-        for el in meta_els:
-            key_val: List[str] = el.split("=")
-            if len(key_val) != 2:
-                raise ParserError(f"Wrong meta structure in '{el}'. "
-                                  f"Line: {line_ind}")
-            try:
-                key = ZoneMetaKey(key_val[0])
-            except ValueError:
-                raise ParserError(f"Unknown meta key '{key_val[0]}'. "
-                                  f"Line: {line_ind}")
-            if key == ZoneMetaKey.ZONE:
-                try:
-                    val = ZoneType(key_val[1])
-                except ValueError:
-                    raise ParserError(f"Unknown zone type '{key_val[1]}'. "
-                                      f"Line: {line_ind}")
-            elif key == ZoneMetaKey.MAX_DRONES:
-                try:
-                    val = int(key_val[1])
-                except ValueError:
-                    raise ParserError(f"Value '{key_val[1]}' must be integer. "
-                                      f"Line: {line_ind}")
-            else:
-                val = key_val[1]
-            if key in meta:
-                raise ParserError(f"Duplicate meta key '{key}'. "
-                                  f"Line: {line_ind}")
-            meta[key] = val
-        return meta
+            raise ParserError("Metadata must end with ']'.", line_ind)
 
     def _get_parsed_keyword(self,
                             line_ind: int,
                             line_els: List[str]) -> ParsedElement:
         first_key = line_els[0]
         if not first_key.endswith(":"):
-            raise ParserError(f"First keyword {first_key} must end with ':'."
-                              f" Line: {line_ind}")
+            raise ParserError(f"First keyword '{first_key}' must end with ':'",
+                              line_ind
+                              )
         helpers = {
             ParsedKeyword.NB_DRONES: self._parse_nb_drones,
             ParsedKeyword.HUB: self._parse_hub,
@@ -157,7 +159,13 @@ class MapParser:
             parsed_el = helpers[first_token](line_els, line_ind)
             return parsed_el
         except ValueError:
-            raise ParserError(f"Unknown map element '{first_token.value}'")
+            raise ParserError(f"Unknown map element '{first_key}'", line_ind)
+
+    def _validate(self, parsed_els: List[ParsedElement]) -> None:
+        
+        if not isinstance(parsed_els[0], ParsedNbDrones):
+            raise ParserError("First map element must be nb_drones", 0)
+        
 
     def parse(self) -> List[ParsedElement]:
         try:
@@ -181,4 +189,5 @@ class MapParser:
             parsed_els.append(self._get_parsed_keyword(ind + 1, line_elems))
         if len(parsed_els) == 0:
             raise ParserError("No map elements were found")
+        self._validate(parsed_els)
         return parsed_els
