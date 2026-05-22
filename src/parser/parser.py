@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List
 from src.cli import AppConfig
 from .models import (ParsedElement, ParsedKeyword, ParsedNbDrones, ParsedHub,
                      ParsedConnection, ZoneType, ZoneMetaKey,
@@ -17,10 +17,14 @@ class MapParser:
         if (len(line_els) < 2):
             raise ParserError("No drones count", line_ind)
         try:
-            return ParsedNbDrones(int(line_els[1]))
+            drones_count = int(line_els[1])
         except ValueError:
             raise ParserError(f"'{line_els[1]}' is not integer",
                               line_ind)
+        try:
+            return ParsedNbDrones(drones_count)
+        except ValueError as e:
+            raise ParserError(str(e), line_ind)
 
     def _parse_hub(self,
                    line_els: List[str],
@@ -36,17 +40,24 @@ class MapParser:
             coord_y = int(line_els[3])
         except ValueError:
             raise ParserError("Coord y must be integer", line_ind)
-        meta: HubMetadata = None
         if len(line_els) > 4:
-            meta = self._parse_hub_meta(line_els[4:], line_ind)
-        return (
-            ParsedHub(
-                kind=HubKind(line_els[0].removesuffix(":")),
-                name=line_els[1],
-                coord_x=coord_x,
-                coord_y=coord_y,
-                meta=meta)
-                )
+            try:
+                meta = self._parse_hub_meta(line_els[4:], line_ind)
+            except ValueError as e:
+                raise ParserError(str(e), line_ind)
+        else:
+            meta = HubMetadata()
+        try:
+            return (
+                ParsedHub(
+                    kind=HubKind(line_els[0].removesuffix(":")),
+                    name=line_els[1],
+                    coord_x=coord_x,
+                    coord_y=coord_y,
+                    meta=meta)
+                    )
+        except ValueError as e:
+            raise ParserError(str(e), line_ind)
 
     def _parse_hub_meta(self,
                         meta_els: List[str],
@@ -79,9 +90,6 @@ class MapParser:
                                       line_ind)
             else:
                 val = key_val[1]
-                if "," in val:
-                    raise ParserError(f"Value for meta key '{key}' "
-                                      f"contains ','.", line_ind)
             if key in meta:
                 raise ParserError(f"Duplicate meta key '{key}'.",
                                   line_ind)
@@ -98,9 +106,13 @@ class MapParser:
         if len(zone1_zone2) != 2:
             raise ParserError(f"Wrong connection structure in '{zone1_zone2}'",
                               line_ind)
-        meta: ConnectionMetadata = None
         if len(line_els) > 2:
-            meta = self._parse_connection_meta(line_els[2:], line_ind)
+            try:
+                meta = self._parse_connection_meta(line_els[2:], line_ind)
+            except ValueError as e:
+                raise ParserError(str(e), line_ind)
+        else:
+            meta = ConnectionMetadata()
         return (ParsedConnection(zone1_zone2[0], zone1_zone2[1], meta))
 
     def _parse_connection_meta(self,
@@ -154,6 +166,8 @@ class MapParser:
         try:
             first_token = ParsedKeyword(first_key[:-1])
             parsed_el = helpers[first_token](line_els, line_ind)
+            if self.app.debug:
+                print(f"Element was parsed: {parsed_el}")
             return parsed_el
         except ValueError:
             raise ParserError(f"Unknown map element '{first_key}'", line_ind)
@@ -168,7 +182,7 @@ class MapParser:
                 lines = f.readlines()
                 if self.app.debug:
                     print(f"File '{self.app.map_path}' was read")
-                    print(lines)
+                    print(f"\nLines: {lines}\n")
         except FileNotFoundError:
             raise ParserError(f"File '{self.app.map_path}' is not exist")
         except PermissionError:

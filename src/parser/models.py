@@ -1,6 +1,5 @@
 from abc import ABC
 from enum import Enum
-from typing import Dict
 from dataclasses import dataclass
 
 
@@ -43,12 +42,25 @@ class ParsedElement(ABC):
 class ParsedNbDrones(ParsedElement):
     drones_count: int
 
+    def __post_init__(self) -> None:
+        if self.drones_count < 1:
+            raise ValueError("drones_count value must be bigger than 0")
+
 
 @dataclass(frozen=True)
 class HubMetadata:
     zone: ZoneType = ZoneType.NORMAL
     color: str = "green"
     max_drones: int = 1
+
+    def __post_init__(self) -> None:
+        if self.max_drones < 1:
+            raise ValueError("max_drones value must be bigger than 0, "
+                             f"was {self.max_drones}")
+        if not self.color.isalpha():
+            raise ValueError("Accepted values for color are any "
+                             "valid single-word strings."
+                             f"Actual: {self.color}")
 
 
 @dataclass(frozen=True)
@@ -59,10 +71,23 @@ class ParsedHub(ParsedElement):
     coord_y: int
     meta: HubMetadata
 
+    def __post_init__(self) -> None:
+        if "-" in self.name:
+            raise ValueError("Zone name can not contain '-'")
+        # if self.coord_x < 0:
+        #     raise ValueError("coord_x can not be negative")
+        # if self.coord_y < 0:
+        #     raise ValueError("coord_y can not be negative")
+
 
 @dataclass(frozen=True)
 class ConnectionMetadata:
     max_link_capacity: int = 1
+
+    def __post_init__(self) -> None:
+        if self.max_link_capacity < 1:
+            raise ValueError("max_link_capacity value must be bigger than 0, "
+                             f"was {self.max_link_capacity}")
 
 
 @dataclass(frozen=True)
