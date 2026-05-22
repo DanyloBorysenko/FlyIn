@@ -1,6 +1,6 @@
 from abc import ABC
 from enum import Enum
-from typing import Dict, Literal
+from typing import Dict
 from dataclasses import dataclass
 
 
@@ -17,6 +17,12 @@ class ZoneType(Enum):
     BLOCKED = "blocked"
     RESTRICTED = "restricted"
     PRIORITY = "priority"
+
+
+class HubKind(Enum):
+    STANDARD = "hub"
+    START = "start_hub"
+    END = "end_hub"
 
 
 class ZoneMetaKey(Enum):
@@ -39,19 +45,28 @@ class ParsedNbDrones(ParsedElement):
 
 
 @dataclass(frozen=True)
+class HubMetadata:
+    zone: ZoneType = ZoneType.NORMAL
+    color: str = "green"
+    max_drones: int = 1
+
+
+@dataclass(frozen=True)
 class ParsedHub(ParsedElement):
-    kind: Literal[ParsedKeyword.HUB,
-                  ParsedKeyword.START_HUB,
-                  ParsedKeyword.END_HUB]
+    kind: HubKind
     name: str
     coord_x: int
     coord_y: int
-    zone_type: ZoneType
-    metadata: Dict | None
+    meta: HubMetadata
+
+
+@dataclass(frozen=True)
+class ConnectionMetadata:
+    max_link_capacity: int = 1
 
 
 @dataclass(frozen=True)
 class ParsedConnection(ParsedElement):
     zone1: str
     zone2: str
-    metadata: Dict | None
+    meta: ConnectionMetadata
