@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 from src.cli import AppConfig
 from .models import (ParsedElement, ParsedKeyword, ParsedNbDrones, ParsedHub,
                      ParsedConnection, ZoneType, ZoneMetaKey,
@@ -62,37 +62,26 @@ class MapParser:
     def _parse_hub_meta(self,
                         meta_els: List[str],
                         line_ind: int) -> HubMetadata:
-        self._check_brackets(meta_els, line_ind)
-        meta_els[0] = meta_els[0].removeprefix("[")
-        meta_els[-1] = meta_els[-1].removesuffix("]")
+        str_meta: Dict[str, str] = self._get_meta_dict(meta_els, line_ind)
         meta = {}
-        for el in meta_els:
-            key_val: List[str] = el.split("=")
-            if len(key_val) != 2:
-                raise ParserError(f"Wrong meta structure in '{el}'",
-                                  line_ind)
+        for key, val in str_meta.items():
             try:
-                key = ZoneMetaKey(key_val[0])
+                key = ZoneMetaKey(key)
             except ValueError:
-                raise ParserError(f"Unknown meta key '{key_val[0]}'",
+                raise ParserError(f"Unknown meta key '{key}'",
                                   line_ind)
             if key == ZoneMetaKey.ZONE:
                 try:
-                    val = ZoneType(key_val[1])
+                    val = ZoneType(val)
                 except ValueError:
-                    raise ParserError(f"Unknown zone type '{key_val[1]}'",
+                    raise ParserError(f"Unknown zone type '{val}'",
                                       line_ind)
             elif key == ZoneMetaKey.MAX_DRONES:
                 try:
-                    val = int(key_val[1])
+                    val = int(val)
                 except ValueError:
-                    raise ParserError(f"Value '{key_val[1]}' must be integer.",
+                    raise ParserError(f"Value '{val}' must be integer.",
                                       line_ind)
-            else:
-                val = key_val[1]
-            if key in meta:
-                raise ParserError(f"Duplicate meta key '{key}'.",
-                                  line_ind)
             meta[key.value] = val
         return HubMetadata(**meta)
 
@@ -118,35 +107,41 @@ class MapParser:
     def _parse_connection_meta(self,
                                meta_els: List[str],
                                line_ind: int) -> ConnectionMetadata:
-        self._check_brackets(meta_els, line_ind)
+        str_meta = self._get_meta_dict(meta_els, line_ind)
+        meta = {}
+        for key, val in str_meta.items():
+            try:
+                key = ConnectionMetaKey(key)
+            except ValueError:
+                raise ParserError(f"Unknown meta key '{key}'.",
+                                  line_ind)
+            try:
+                val = int(val)
+            except ValueError:
+                raise ParserError(f"Value for the key {key.value} "
+                                  f"must be integer, but was {val}.",
+                                  line_ind)
+            meta[key.value] = val
+        return ConnectionMetadata(**meta)
+
+    def _get_meta_dict(self, meta_els: List[str],
+                       line_ind: int) -> Dict[str, str]:
+        if not meta_els[0].startswith("["):
+            raise ParserError("Metadata must start with '['.", line_ind)
+        if not meta_els[-1].endswith("]"):
+            raise ParserError("Metadata must end with ']'.", line_ind)
         meta_els[0] = meta_els[0].removeprefix("[")
         meta_els[-1] = meta_els[-1].removesuffix("]")
         meta = {}
         for el in meta_els:
             key_val = el.split("=")
             if len(key_val) != 2:
-                raise ParserError(f"Wrong meta structure in '{el}'.", line_ind)
-            try:
-                key = ConnectionMetaKey(key_val[0])
-            except ValueError:
-                raise ParserError(f"Unknown meta key '{key_val[0]}'.",
+                raise ParserError(f"Wrong meta syntax in '{el}'.", line_ind)
+            if key_val[0] in meta:
+                raise ParserError(f"Duplicate meta key '{key_val[0]}'.",
                                   line_ind)
-            if key in meta:
-                raise ParserError(f"Duplicate meta key '{key}'.", line_ind)
-            try:
-                val = int(key_val[1])
-            except ValueError:
-                raise ParserError(f"Value for the key {key.value} "
-                                  f"must be integer, but was {key_val[1]}.",
-                                  line_ind)
-            meta[key.value] = val
-        return ConnectionMetadata(**meta)
-
-    def _check_brackets(self, meta_els: List[str], line_ind: int) -> None:
-        if not meta_els[0].startswith("["):
-            raise ParserError("Metadata must start with '['.", line_ind)
-        if not meta_els[-1].endswith("]"):
-            raise ParserError("Metadata must end with ']'.", line_ind)
+            meta[key_val[0]] = key_val[1]
+        return meta
 
     def _get_parsed_keyword(self,
                             line_ind: int,

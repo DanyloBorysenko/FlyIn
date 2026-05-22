@@ -1,11 +1,15 @@
 from src.parser.errors import ParserError
 
 
+class A:
+    tools = []
+
+
 def main():
-    try:
-        raise ParserError("msg", 1)
-    except ParserError as e:
-        print(e)
+    x = A()
+    y = A()
+    x.tools.append("Hi")
+    print(y.tools)
 
 
 if __name__ == "__main__":

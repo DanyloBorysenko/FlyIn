@@ -50,14 +50,14 @@ class ParsedNbDrones(ParsedElement):
 @dataclass(frozen=True)
 class HubMetadata:
     zone: ZoneType = ZoneType.NORMAL
-    color: str = "green"
+    color: str | None = None
     max_drones: int = 1
 
     def __post_init__(self) -> None:
         if self.max_drones < 1:
             raise ValueError("max_drones value must be bigger than 0, "
                              f"was {self.max_drones}")
-        if not self.color.isalpha():
+        if self.color and not self.color.isalpha():
             raise ValueError("Accepted values for color are any "
                              "valid single-word strings."
                              f"Actual: {self.color}")
