@@ -51,7 +51,8 @@ class ParsedNbDrones(ParsedElement):
 
 
 @dataclass(frozen=True, kw_only=True)
-class HubMetadata(ParsedElement):
+class HubMetadata:
+    line_ind: int
     zone: ZoneType = ZoneType.NORMAL
     color: str | None = None
     max_drones: int = 1
@@ -80,7 +81,8 @@ class ParsedHub(ParsedElement):
 
 
 @dataclass(frozen=True)
-class ConnectionMetadata(ParsedElement):
+class ConnectionMetadata:
+    line_ind: int
     max_link_capacity: int = 1
 
     def __post_init__(self) -> None:
