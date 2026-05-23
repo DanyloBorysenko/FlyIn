@@ -21,10 +21,7 @@ class MapParser:
         except ValueError:
             raise ParserError(f"'{line_els[1]}' is not integer",
                               line_ind)
-        try:
-            return ParsedNbDrones(drones_count)
-        except ValueError as e:
-            raise ParserError(str(e), line_ind)
+        return ParsedNbDrones(line_ind=line_ind, drones_count=drones_count)
 
     def _parse_hub(self,
                    line_els: List[str],
@@ -41,29 +38,24 @@ class MapParser:
         except ValueError:
             raise ParserError("Coord y must be integer", line_ind)
         if len(line_els) > 4:
-            try:
-                meta = self._parse_hub_meta(line_els[4:], line_ind)
-            except ValueError as e:
-                raise ParserError(str(e), line_ind)
+            meta = self._parse_hub_meta(line_els[4:], line_ind)
         else:
-            meta = HubMetadata()
-        try:
-            return (
+            meta = HubMetadata(line_ind=line_ind)
+        return (
                 ParsedHub(
+                    line_ind=line_ind,
                     kind=HubKind(line_els[0].removesuffix(":")),
                     name=line_els[1],
                     coord_x=coord_x,
                     coord_y=coord_y,
                     meta=meta)
-                    )
-        except ValueError as e:
-            raise ParserError(str(e), line_ind)
+                )
 
     def _parse_hub_meta(self,
                         meta_els: List[str],
                         line_ind: int) -> HubMetadata:
         str_meta: Dict[str, str] = self._get_meta_dict(meta_els, line_ind)
-        meta = {}
+        meta = {"line_ind": line_ind}
         for key, val in str_meta.items():
             try:
                 key = ZoneMetaKey(key)
@@ -96,19 +88,17 @@ class MapParser:
             raise ParserError(f"Wrong connection structure in '{zone1_zone2}'",
                               line_ind)
         if len(line_els) > 2:
-            try:
-                meta = self._parse_connection_meta(line_els[2:], line_ind)
-            except ValueError as e:
-                raise ParserError(str(e), line_ind)
+            meta = self._parse_connection_meta(line_els[2:], line_ind)
         else:
-            meta = ConnectionMetadata()
-        return (ParsedConnection(zone1_zone2[0], zone1_zone2[1], meta))
+            meta = ConnectionMetadata(line_ind=line_ind)
+        return (ParsedConnection(line_ind=line_ind, zone1=zone1_zone2[0],
+                                 zone2=zone1_zone2[1], meta=meta))
 
     def _parse_connection_meta(self,
                                meta_els: List[str],
                                line_ind: int) -> ConnectionMetadata:
         str_meta = self._get_meta_dict(meta_els, line_ind)
-        meta = {}
+        meta = {"line_ind": line_ind}
         for key, val in str_meta.items():
             try:
                 key = ConnectionMetaKey(key)
@@ -170,6 +160,8 @@ class MapParser:
     def _validate(self, parsed_els: List[ParsedElement]) -> None:
         if not isinstance(parsed_els[0], ParsedNbDrones):
             raise ParserError("First map element must be nb_drones", 0)
+        for el in parsed_els[1:]:
+            if 
 
     def parse(self) -> List[ParsedElement]:
         try:

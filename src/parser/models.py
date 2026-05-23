@@ -1,6 +1,7 @@
 from abc import ABC
 from enum import Enum
 from dataclasses import dataclass
+from .errors import ParserError
 
 
 class ParsedKeyword(Enum):
@@ -34,36 +35,38 @@ class ConnectionMetaKey(Enum):
     MAX_LINK_CAP = "max_link_capacity"
 
 
+@dataclass(frozen=True, kw_only=True)
 class ParsedElement(ABC):
-    pass
+    line_ind: int
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ParsedNbDrones(ParsedElement):
     drones_count: int
 
     def __post_init__(self) -> None:
         if self.drones_count < 1:
-            raise ValueError("drones_count value must be bigger than 0")
+            raise ParserError("drones_count value must be bigger than 0",
+                              self.line_ind)
 
 
-@dataclass(frozen=True)
-class HubMetadata:
+@dataclass(frozen=True, kw_only=True)
+class HubMetadata(ParsedElement):
     zone: ZoneType = ZoneType.NORMAL
     color: str | None = None
     max_drones: int = 1
 
     def __post_init__(self) -> None:
         if self.max_drones < 1:
-            raise ValueError("max_drones value must be bigger than 0, "
-                             f"was {self.max_drones}")
+            raise ParserError("max_drones value must be bigger than 0, "
+                              f"was {self.max_drones}", self.line_ind)
         if self.color and not self.color.isalpha():
-            raise ValueError("Accepted values for color are any "
-                             "valid single-word strings."
-                             f"Actual: {self.color}")
+            raise ParserError("Accepted values for color are any "
+                              "valid single-word strings. "
+                              f"Actual: '{self.color}'", self.line_ind)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ParsedHub(ParsedElement):
     kind: HubKind
     name: str
@@ -73,7 +76,7 @@ class ParsedHub(ParsedElement):
 
     def __post_init__(self) -> None:
         if "-" in self.name:
-            raise ValueError("Zone name can not contain '-'")
+            raise ParserError("Zone name can not contain '-'", self.line_ind)
         # if self.coord_x < 0:
         #     raise ValueError("coord_x can not be negative")
         # if self.coord_y < 0:
@@ -81,16 +84,16 @@ class ParsedHub(ParsedElement):
 
 
 @dataclass(frozen=True)
-class ConnectionMetadata:
+class ConnectionMetadata(ParsedElement):
     max_link_capacity: int = 1
 
     def __post_init__(self) -> None:
         if self.max_link_capacity < 1:
-            raise ValueError("max_link_capacity value must be bigger than 0, "
-                             f"was {self.max_link_capacity}")
+            raise ParserError("max_link_capacity value must be bigger than 0, "
+                              f"was {self.max_link_capacity}", self.line_ind)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ParsedConnection(ParsedElement):
     zone1: str
     zone2: str
