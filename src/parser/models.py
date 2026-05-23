@@ -98,3 +98,14 @@ class ParsedConnection(ParsedElement):
     zone1: str
     zone2: str
     meta: ConnectionMetadata
+
+    def _zone_set(self) -> frozenset[str]:
+        return frozenset((self.zone1, self.zone2))
+
+    def __eq__(self, value):
+        if not isinstance(value, ParsedConnection):
+            return False
+        return self._zone_set() == value._zone_set()
+
+    def __hash__(self):
+        return hash(self._zone_set())

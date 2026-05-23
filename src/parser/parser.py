@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Set
 from src.cli import AppConfig
 from .models import (ParsedElement, ParsedKeyword, ParsedNbDrones, ParsedHub,
                      ParsedConnection, ZoneType, ZoneMetaKey,
@@ -157,11 +157,43 @@ class MapParser:
         except ValueError:
             raise ParserError(f"Unknown map element '{first_key}'", line_ind)
 
+    def _raise_unknown_zone(self, zone_name: str, line_ind: int) -> None:
+        raise ParserError(f"Unknown zone - {zone_name}. "
+                          "Connections must link only previously "
+                          "defined zones", line_ind)
+
     def _validate(self, parsed_els: List[ParsedElement]) -> None:
         if not isinstance(parsed_els[0], ParsedNbDrones):
             raise ParserError("First map element must be nb_drones", 0)
+        hubs: Dict[str: ParsedElement] = {}
+        connections: Set[ParsedConnection] = set()
+        start_hubs = 0
+        end_hubs = 0
         for el in parsed_els[1:]:
-            if 
+            if isinstance(el, ParsedHub):
+                if el.name in hubs:
+                    raise ParserError(f"Hub name duplication - '{el.name}'",
+                                      el.line_ind)
+                match el.kind:
+                    case HubKind.START:
+                        start_hubs += 1
+                    case HubKind.END:
+                        end_hubs += 1
+                hubs[el.name] = el
+            elif isinstance(el, ParsedConnection):
+                if el in connections:
+                    raise ParserError("Connection duplication", el.line_ind)
+                if el.zone1 not in hubs:
+                    self._raise_unknown_zone(el.zone1, el.line_ind)
+                if el.zone2 not in hubs:
+                    self._raise_unknown_zone(el.zone2, el.line_ind)
+                connections.add(el)
+        if start_hubs != 1:
+            raise ParserError("Expected exactly 1 start_hub, "
+                              f"got {start_hubs}")
+        if end_hubs != 1:
+            raise ParserError("Expected exactly 1 end_hub, "
+                              f"got {end_hubs}")
 
     def parse(self) -> List[ParsedElement]:
         try:
