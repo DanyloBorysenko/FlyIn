@@ -1,0 +1,10 @@
+nb_drones: 12
+
+start_hub: start 0 0 [zone=normal color=green max_drones=12]
+hub: restricted_tunnel1 4 0 [zone=restricted color=red max_drones=2]
+hub: priority_bypass1 4 1 [zone=priority color=cyan max_drones=3]
+hub: gate1_blocked 1 0 [zone=blocked color=orange]
+end_hub: goal 9 0 [color=green max_drones=12]
+
+connection: start-restricted_tunnel1 [max_link_capacity=1]
+connection: priority_bypass1-goal

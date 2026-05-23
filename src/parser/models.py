@@ -77,10 +77,6 @@ class ParsedHub(ParsedElement):
     def __post_init__(self) -> None:
         if "-" in self.name:
             raise ParserError("Zone name can not contain '-'", self.line_ind)
-        # if self.coord_x < 0:
-        #     raise ValueError("coord_x can not be negative")
-        # if self.coord_y < 0:
-        #     raise ValueError("coord_y can not be negative")
 
 
 @dataclass(frozen=True)
