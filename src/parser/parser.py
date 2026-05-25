@@ -1,8 +1,9 @@
 from typing import List, Dict, Set
 from src.cli import AppConfig
+from src.domain import ZoneType, HubKind
 from .models import (ParsedElement, ParsedKeyword, ParsedNbDrones, ParsedHub,
-                     ParsedConnection, ZoneType, ZoneMetaKey,
-                     ConnectionMetaKey, HubKind, HubMetadata,
+                     ParsedConnection, ZoneMetaKey,
+                     ConnectionMetaKey, HubMetadata,
                      ConnectionMetadata)
 from .errors import ParserError
 
@@ -203,7 +204,7 @@ class MapParser:
                     print(f"File '{self.app.map_path}' was read")
                     print(f"\nLines: {lines}\n")
         except FileNotFoundError:
-            raise ParserError(f"File '{self.app.map_path}' is not exist")
+            raise ParserError(f"File '{self.app.map_path}' doesn't exist")
         except PermissionError:
             raise ParserError("No reading permission for file "
                               f"'{self.app.map_path}'")

@@ -1,6 +1,7 @@
 from abc import ABC
 from enum import Enum
 from dataclasses import dataclass
+from src.domain import ZoneType, HubKind
 from .errors import ParserError
 
 
@@ -10,19 +11,6 @@ class ParsedKeyword(Enum):
     END_HUB = "end_hub"
     HUB = "hub"
     CONNECTION = "connection"
-
-
-class ZoneType(Enum):
-    NORMAL = "normal"
-    BLOCKED = "blocked"
-    RESTRICTED = "restricted"
-    PRIORITY = "priority"
-
-
-class HubKind(Enum):
-    STANDARD = "hub"
-    START = "start_hub"
-    END = "end_hub"
 
 
 class ZoneMetaKey(Enum):

@@ -1,8 +1,18 @@
 import subprocess
+import os
 from pathlib import Path
 
 
 INVALID_MAPS_DIR = Path("invalid_maps")
+
+
+def run_no_rights_map(path: Path) -> None:
+    original_mode = os.stat(path).st_mode
+    try:
+        os.chmod(path, 0)
+        run_map(path)
+    finally:
+        os.chmod(path, original_mode)
 
 
 def run_map(map_path: Path) -> None:
@@ -26,6 +36,8 @@ def main() -> None:
 
     for map_path in maps:
         run_map(map_path)
+    run_no_rights_map(path="invalid_maps/no_rights.txt")
+    run_map("invalid_maps/uknownfile.txt")
 
 
 if __name__ == "__main__":

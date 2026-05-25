@@ -1,7 +1,7 @@
 from src.cli import AppConfig
 from src.parser import MapParser
+from src.domain import ZoneType, HubKind
 from src.parser.models import (ParsedNbDrones, ParsedHub, ParsedConnection,
-                               ZoneType, HubKind,
                                HubMetadata, ConnectionMetadata)
 
 
