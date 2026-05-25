@@ -51,8 +51,3 @@ def test_invalid_semantic_maps(map_path: Path) -> None:
     with pytest.raises(ParserError):
         app = AppConfig(map_path=str(map_path))
         MapParser(app=app).parse()
-
-# def test_line_with_spaces_only() -> None:
-#     app = AppConfig(
-#         map_path="tests/parser/valid_maps/line_with_spaces_only.txt")
-#     MapParser(app=app).parse()
