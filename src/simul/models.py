@@ -1,4 +1,4 @@
-from src.parser.models import ParsedHub
+from src.parser import ParsedHub
 from typing import List, Dict
 from dataclasses import dataclass
 
@@ -40,3 +40,10 @@ class SimulationMap:
     hubs: Dict[str, Hub]
     connections: List[Connection]
     drones: List[Drone]
+
+    def __repr__(self) -> str:
+        return (f"\nStart hub: {self.start_hub}\n"
+                f"End hub: {self.end_hub}\n"
+                f"Hubs: {self.hubs}\n"
+                f"Connections: {self.connections}\n"
+                f"Drones: {self.drones}")

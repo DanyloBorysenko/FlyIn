@@ -1,7 +1,7 @@
 import sys
-from src.cli import build_app_config
-from src.cli import AppConfigError
+from src.cli import AppConfigError, build_app_config
 from src.parser import MapParser, ParserError
+from src.simul import SimulationBuilder
 
 
 def main() -> None:
@@ -9,12 +9,11 @@ def main() -> None:
         app_config = build_app_config(sys.argv)
         if app_config.debug:
             print(f"AppConfig was created: {app_config}")
-        parser = MapParser(app_config)
-        parser.parse()
-    except AppConfigError as e:
-        print(f"{e.__class__.__name__}: {e}", file=sys.stderr)
-        sys.exit(1)
-    except ParserError as e:
+        parsed_elements = MapParser(app_config).parse()
+        map = SimulationBuilder(app_config).build_sim_map(parsed_elements)
+        if app_config.debug:
+            print(f"\nSimulationMap was built: {map}")
+    except (AppConfigError, ParserError) as e:
         print(f"{e.__class__.__name__}: {e}", file=sys.stderr)
         sys.exit(1)
 
