@@ -3,6 +3,7 @@ from enum import Enum
 from dataclasses import dataclass
 from src.domain import ZoneType, HubKind
 from .errors import ParserError
+from typing import Any
 
 
 class ParsedKeyword(Enum):
@@ -88,10 +89,10 @@ class ParsedConnection(ParsedElement):
     def _zone_set(self) -> frozenset[str]:
         return frozenset((self.zone1, self.zone2))
 
-    def __eq__(self, value):
+    def __eq__(self, value: Any) -> bool:
         if not isinstance(value, ParsedConnection):
             return False
         return self._zone_set() == value._zone_set()
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self._zone_set())

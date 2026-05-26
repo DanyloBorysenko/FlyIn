@@ -5,6 +5,7 @@ from enum import Enum
 class Flag(Enum):
     MAP_PATH = "--map-path"
     DEBUG = "--debug"
+    VISUAL = "--visual"
 
     def parse_flag(self) -> str:
         return self.value.removeprefix("--").replace("-", "_")
@@ -18,3 +19,4 @@ class Flag(Enum):
 class AppConfig:
     map_path: str = "maps/easy/01_linear_path.txt"
     debug: bool = False
+    visual: bool = False
