@@ -15,6 +15,11 @@ class Hub:
         self.nb_drones = 0
         self.connections: List["Connection"] = []
 
+    def __repr__(self) -> str:
+        return ("Hub:\n"
+                f"Name: {self.name}\n"
+                f"Color: {self.color}")
+
 
 class Connection:
     def __init__(self, hub_1: Hub, hub_2: Hub, capacity: int) -> None:
