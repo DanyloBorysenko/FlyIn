@@ -12,7 +12,6 @@ class Hub:
         self.zone_type = parsed_hub.meta.zone
         self.color = parsed_hub.meta.color
         self.max_capacity = parsed_hub.meta.max_drones
-        self.slot_reserved = 0
         self.nb_drones = 0
         self.connections: List["Connection"] = []
 
@@ -30,7 +29,7 @@ class Drone:
     def __init__(self, id: int) -> None:
         self.id = id
         self.current_zone: Hub | None = None
-        self.current_connection: Hub | None = None
+        self.current_connection: Connection | None = None
 
 
 @dataclass

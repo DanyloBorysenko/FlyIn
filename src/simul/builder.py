@@ -24,6 +24,8 @@ class SimulationBuilder:
                     hubs[el.zone1],
                     hubs[el.zone2],
                     el.meta.max_link_capacity)
+                hubs[conn.hub_1.name].connections.append(conn)
+                hubs[conn.hub_2.name].connections.append(conn)
                 connections.append(conn)
         return connections
 
@@ -32,7 +34,7 @@ class SimulationBuilder:
         connections: Connection = self._build_connections(data, hubs)
         start = [hub for hub in hubs.values() if hub.kind == HubKind.START][0]
         end = [hub for hub in hubs.values() if hub.kind == HubKind.END][0]
-        drones = [Drone(i) for i in range(1, data[0].drones_count)]
+        drones = [Drone(i) for i in range(1, data[0].drones_count + 1)]
         return SimulationMap(
             start_hub=start,
             end_hub=end,
