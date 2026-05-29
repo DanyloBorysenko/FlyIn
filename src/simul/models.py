@@ -1,5 +1,5 @@
 from src.parser import ParsedHub
-from typing import List, Dict
+from typing import List, Dict, Any
 from dataclasses import dataclass
 
 
@@ -20,14 +20,27 @@ class Hub:
                 f"Name: {self.name}\n"
                 f"Color: {self.color}")
 
+    def __hash__(self) -> int:
+        return hash(self.name)
+
+    def __eq__(self, value: Any) -> bool:
+        return isinstance(value, Hub) and self.name == value.name
+
 
 class Connection:
     def __init__(self, hub_1: Hub, hub_2: Hub, capacity: int) -> None:
+        self.name = "-".join(sorted([hub_1.name, hub_2.name]))
         self.hub_1 = hub_1
         self.hub_2 = hub_2
         self.color = "white"
         self.max_capacity = capacity
         self.nb_drones = 0
+
+    def __hash__(self) -> int:
+        return hash(self.name)
+
+    def __eq__(self, value: Any) -> bool:
+        return isinstance(value, Connection) and self.name == value.name
 
 
 class Drone:
