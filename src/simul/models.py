@@ -15,10 +15,19 @@ class Hub:
         self.nb_drones = 0
         self.connections: List["Connection"] = []
 
+    def get_neighbours(self) -> List[Hub]:
+        neighbours = []
+        for conn in self.connections:
+            hub1 = conn.hub_1
+            hub2 = conn.hub_2
+            if self == hub1:
+                neighbours.append(hub2)
+            elif self == hub2:
+                neighbours.append(hub1)
+        return neighbours
+
     def __repr__(self) -> str:
-        return ("Hub:\n"
-                f"Name: {self.name}\n"
-                f"Color: {self.color}")
+        return f"Hub: {self.name}"
 
     def __hash__(self) -> int:
         return hash(self.name)
@@ -32,7 +41,9 @@ class Connection:
         self.name = "-".join(sorted([hub_1.name, hub_2.name]))
         self.hub_1 = hub_1
         self.hub_2 = hub_2
-        self.color = "white"
+        self.coord_x = (hub_1.coord_x + hub_2.coord_x) / 2
+        self.coord_y = (hub_1.coord_y + hub_2.coord_y) / 2
+        self.color = "black"
         self.max_capacity = capacity
         self.nb_drones = 0
 
@@ -42,12 +53,26 @@ class Connection:
     def __eq__(self, value: Any) -> bool:
         return isinstance(value, Connection) and self.name == value.name
 
+    def __repr__(self) -> str:
+        return (f"Connection: {self.name}"
+                f"\n coord_x: {self.coord_x}, coord_y: {self.coord_y}")
+
+
+@dataclass
+class StepPath:
+    location: Hub | Connection
+
 
 class Drone:
     def __init__(self, id: int) -> None:
-        self.id = id
-        self.current_zone: Hub | None = None
-        self.current_connection: Connection | None = None
+        self.id = f"D{id}"
+        self.steps: List[StepPath] = []
+
+    def __eq__(self, value: Any) -> bool:
+        return isinstance(value, Drone) and value.id == self.id
+
+    def __hash__(self) -> int:
+        return hash(self.id)
 
 
 @dataclass

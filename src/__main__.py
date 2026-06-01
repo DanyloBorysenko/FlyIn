@@ -3,6 +3,7 @@ from src.cli import AppConfigError, build_app_config
 from src.parser import MapParser, ParserError
 from src.simul import SimulationBuilder, SimulationError
 from src.visualisation.visualizer import Visualizer
+from src.simul import Solver
 
 
 def main() -> None:
@@ -14,6 +15,9 @@ def main() -> None:
         map = SimulationBuilder(app_config).build_sim_map(parsed_elements)
         if app_config.debug:
             print(f"\nSimulationMap was built: {map}")
+        solver = Solver(map)
+        # solver.print_heuristic()
+        solver.solve()
         if app_config.visual:
             Visualizer(app_config, map).run()
     except (AppConfigError, ParserError, SimulationError) as e:

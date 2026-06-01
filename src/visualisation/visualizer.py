@@ -1,14 +1,14 @@
 from src.cli import AppConfig
 from src.simul import SimulationMap
-from typing import Tuple, List
+from typing import Tuple, List, Dict
 import pygame
-import math
 
 
-WINDOW_WIDTH = 1280
-WINDOW_HEIGHT = 720
+WINDOW_WIDTH = 1700
+WINDOW_HEIGHT = 900
 PADDING = 60
 HUB_SIZE = 40
+DRON_SIZE = 35
 
 
 class Visualizer:
@@ -16,6 +16,7 @@ class Visualizer:
         self.app = app
         self.map = map
         self._compute_scale()
+        print(self.map.drones[0].steps)
 
     def _compute_scale(self) -> None:
         self.min_x = min(hub.coord_x for hub in self.map.hubs.values())
@@ -38,34 +39,70 @@ class Visualizer:
                         (WINDOW_HEIGHT - 2 * PADDING) + PADDING)
         return new_x, new_y
 
-    def _build_hub_surfaces(self) -> List[Tuple]:
-        hub_surfaces = []
-        for hub in self.map.hubs.values():
-            surface = pygame.Surface((HUB_SIZE, HUB_SIZE))
-            try:
-                surface.fill(hub.color if hub.color else "white")
-            except ValueError:
-                surface.fill("springgreen3")
-            x, y = self._to_screen(hub.coord_x, hub.coord_y)
-            pos = (x - HUB_SIZE // 2, y - HUB_SIZE // 2)
-            hub_surfaces.append((surface, pos))
-        return hub_surfaces
-
     def run(self) -> None:
+        turn = 0
         pygame.init()
+        clock = pygame.time.Clock()
         screen_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-        hub_surfaces = self._build_hub_surfaces()
+        pygame.display.set_caption(self.app.map_path)
+        font = pygame.font.Font(size=12)
+        hub_text_cache: Dict[str, Tuple[pygame.Surface, pygame.Surface]] = {}
+        for name, hub in self.map.hubs.items():
+            name_surf = font.render(name, True, "white")
+            zone_type_surf = font.render(hub.zone_type.value, True, "white")
+            hub_text_cache[name] = (name_surf, zone_type_surf)
+        dron = pygame.image.load("images/player.png")
+        scaled_dron = pygame.transform.scale(
+            dron, (DRON_SIZE, DRON_SIZE)).convert_alpha()
+        dron_rect = scaled_dron.get_frect()
+        dron_rect.center = self._to_screen(
+            self.map.start_hub.coord_x, self.map.start_hub.coord_y)
+        drones = {dron: dron_rect.copy() for dron in self.map.drones}
+        speed = 1.0
         running = True
         while running:
+            clock.tick()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-            screen_surface.fill(color="black")
-            pygame.display.set_caption(self.app.map_path)
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RIGHT:
+                        turn += 1
+                    if event.key == pygame.K_LEFT:
+                        turn -= 1
+            screen_surface.fill(color="grey38")
             for conn in self.map.connections:
                 start = self._to_screen(conn.hub_1.coord_x, conn.hub_1.coord_y)
                 end = self._to_screen(conn.hub_2.coord_x, conn.hub_2.coord_y)
-                pygame.draw.line(screen_surface, "white", start, end)
-            screen_surface.blits(hub_surfaces)
+                pygame.draw.line(screen_surface, conn.color, start, end)
+            for hub in self.map.hubs.values():
+                surface = pygame.Surface((HUB_SIZE, HUB_SIZE))
+                try:
+                    surface.fill(hub.color if hub.color else "white")
+                except ValueError:
+                    surface.fill("springgreen3")
+                hub_rec = surface.get_frect()
+                hub_rec.center = self._to_screen(hub.coord_x, hub.coord_y)
+                screen_surface.blit(surface, hub_rec)
+
+                name_surf, zone_type_surf = hub_text_cache[hub.name]
+                name_rec = name_surf.get_frect()
+                name_rec.center = (hub_rec.midbottom[0],
+                                   hub_rec.midbottom[1] + 10)
+                screen_surface.blit(name_surf, name_rec)
+                zone_type_rec = zone_type_surf.get_frect()
+                zone_type_rec.center = (name_rec.midbottom[0],
+                                        name_rec.midbottom[1] + 15)
+                screen_surface.blit(zone_type_surf, zone_type_rec)
+            for dron, dron_rec in drones.items():
+                screen_surface.blit(scaled_dron, dron_rec)
+                if turn < len(dron.steps) and turn >= 0:
+                    next_x, next_y = self._to_screen(
+                        dron.steps[turn].location.coord_x,
+                        dron.steps[turn].location.coord_y)
+                    next = pygame.math.Vector2((next_x, next_y))
+                    current = pygame.math.Vector2(
+                        dron_rec.center).move_towards(next, speed)
+                    dron_rec.center = current
             pygame.display.update()
         pygame.quit()
