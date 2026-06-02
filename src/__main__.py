@@ -12,14 +12,14 @@ def main() -> None:
         if app_config.debug:
             print(f"AppConfig was created: {app_config}")
         parsed_elements = MapParser(app_config).parse()
-        map = SimulationBuilder(app_config).build_sim_map(parsed_elements)
+        simul = SimulationBuilder(app_config).build_simulation(parsed_elements)
         if app_config.debug:
-            print(f"\nSimulationMap was built: {map}")
-        solver = Solver(map)
+            print(f"\nSimulationMap was built: {simul}")
+        solver = Solver(simul)
         # solver.print_heuristic()
         solver.solve()
         if app_config.visual:
-            Visualizer(app_config, map).run()
+            Visualizer(app_config, simul).run()
     except (AppConfigError, ParserError, SimulationError) as e:
         print(f"{e.__class__.__name__}: {e}", file=sys.stderr)
         sys.exit(1)

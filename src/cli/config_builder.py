@@ -4,6 +4,7 @@ from dataclasses import asdict
 
 
 def build_app_config(argv: list[str]) -> AppConfig:
+    print(argv)
     config = asdict(AppConfig())
     if len(argv) > 1:
         val: str | bool

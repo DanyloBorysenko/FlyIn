@@ -1,5 +1,5 @@
 from src.cli import AppConfig
-from src.simul import SimulationMap
+from src.simul import Simulation
 from typing import Tuple, List, Dict
 import pygame
 
@@ -12,17 +12,16 @@ DRON_SIZE = 35
 
 
 class Visualizer:
-    def __init__(self, app: AppConfig, map: SimulationMap) -> None:
+    def __init__(self, app: AppConfig, simul: Simulation) -> None:
         self.app = app
-        self.map = map
+        self.simul = simul
         self._compute_scale()
-        print(self.map.drones[0].steps)
 
     def _compute_scale(self) -> None:
-        self.min_x = min(hub.coord_x for hub in self.map.hubs.values())
-        self.min_y = min(hub.coord_y for hub in self.map.hubs.values())
-        self.max_x = max(hub.coord_x for hub in self.map.hubs.values())
-        self.max_y = max(hub.coord_y for hub in self.map.hubs.values())
+        self.min_x = min(hub.coord_x for hub in self.simul.hubs.values())
+        self.min_y = min(hub.coord_y for hub in self.simul.hubs.values())
+        self.max_x = max(hub.coord_x for hub in self.simul.hubs.values())
+        self.max_y = max(hub.coord_y for hub in self.simul.hubs.values())
 
     def _to_screen(self, x: int, y: int) -> Tuple[int, int]:
         range_x = (self.max_x - self.min_x)
@@ -47,7 +46,7 @@ class Visualizer:
         pygame.display.set_caption(self.app.map_path)
         font = pygame.font.Font(size=12)
         hub_text_cache: Dict[str, Tuple[pygame.Surface, pygame.Surface]] = {}
-        for name, hub in self.map.hubs.items():
+        for name, hub in self.simul.hubs.items():
             name_surf = font.render(name, True, "white")
             zone_type_surf = font.render(hub.zone_type.value, True, "white")
             hub_text_cache[name] = (name_surf, zone_type_surf)
@@ -56,9 +55,9 @@ class Visualizer:
             dron, (DRON_SIZE, DRON_SIZE)).convert_alpha()
         dron_rect = scaled_dron.get_frect()
         dron_rect.center = self._to_screen(
-            self.map.start_hub.coord_x, self.map.start_hub.coord_y)
-        drones = {dron: dron_rect.copy() for dron in self.map.drones}
-        speed = 1.0
+            self.simul.start_hub.coord_x, self.simul.start_hub.coord_y)
+        drones = {dron: dron_rect.copy() for dron in self.simul.drones}
+        speed = 2.0
         running = True
         while running:
             clock.tick()
@@ -71,11 +70,11 @@ class Visualizer:
                     if event.key == pygame.K_LEFT:
                         turn -= 1
             screen_surface.fill(color="grey38")
-            for conn in self.map.connections:
+            for conn in self.simul.connections.values():
                 start = self._to_screen(conn.hub_1.coord_x, conn.hub_1.coord_y)
                 end = self._to_screen(conn.hub_2.coord_x, conn.hub_2.coord_y)
                 pygame.draw.line(screen_surface, conn.color, start, end)
-            for hub in self.map.hubs.values():
+            for hub in self.simul.hubs.values():
                 surface = pygame.Surface((HUB_SIZE, HUB_SIZE))
                 try:
                     surface.fill(hub.color if hub.color else "white")

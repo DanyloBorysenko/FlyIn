@@ -47,6 +47,12 @@ class Connection:
         self.max_capacity = capacity
         self.nb_drones = 0
 
+    def get_oposssite(self, hub: Hub) -> Hub:
+        if hub == self.hub_1:
+            return self.hub_2
+        elif hub == self.hub_2:
+            return self.hub_1
+
     def __hash__(self) -> int:
         return hash(self.name)
 
@@ -76,11 +82,11 @@ class Drone:
 
 
 @dataclass
-class SimulationMap:
+class Simulation:
     start_hub: Hub
     end_hub: Hub
     hubs: Dict[str, Hub]
-    connections: List[Connection]
+    connections: Dict[str, Connection]
     drones: List[Drone]
 
     def __repr__(self) -> str:

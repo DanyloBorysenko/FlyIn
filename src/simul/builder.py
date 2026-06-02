@@ -1,6 +1,6 @@
 from src.parser.models import ParsedElement, ParsedHub, ParsedConnection
 from src.cli import AppConfig
-from .models import SimulationMap, Hub, Connection, Drone
+from .models import Simulation, Hub, Connection, Drone, StepPath
 from src.domain import HubKind
 from typing import List, Dict
 
@@ -16,8 +16,8 @@ class SimulationBuilder:
     def _build_connections(
             self,
             data: List[ParsedElement],
-            hubs: Dict[str, Hub]) -> List[Connection]:
-        connections = []
+            hubs: Dict[str, Hub]) -> Dict[str, Connection]:
+        connections = {}
         for el in data:
             if isinstance(el, ParsedConnection):
                 conn = Connection(
@@ -26,16 +26,21 @@ class SimulationBuilder:
                     el.meta.max_link_capacity)
                 hubs[conn.hub_1.name].connections.append(conn)
                 hubs[conn.hub_2.name].connections.append(conn)
-                connections.append(conn)
+                connections[conn.name] = conn
         return connections
 
-    def build_sim_map(self, data: List[ParsedElement]) -> SimulationMap:
+    def build_simulation(self, data: List[ParsedElement]) -> Simulation:
         hubs: Dict[str, Hub] = self._build_hubs(data)
-        connections: Connection = self._build_connections(data, hubs)
+        connections: Dict[str, Connection] = self._build_connections(
+            data, hubs)
         start = [hub for hub in hubs.values() if hub.kind == HubKind.START][0]
         end = [hub for hub in hubs.values() if hub.kind == HubKind.END][0]
+        start.max_capacity = data[0].drones_count
+        end.max_capacity = data[0].drones_count
         drones = [Drone(i) for i in range(1, data[0].drones_count + 1)]
-        return SimulationMap(
+        first_step = StepPath(start)
+        [dron.steps.append(first_step) for dron in drones]
+        return Simulation(
             start_hub=start,
             end_hub=end,
             hubs=hubs,
