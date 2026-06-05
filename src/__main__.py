@@ -16,10 +16,11 @@ def main() -> None:
         if app_config.debug:
             print(f"\nSimulationMap was built: {simul}")
         solver = Solver(simul)
-        # solver.print_heuristic()
         solver.solve()
         if app_config.visual:
-            Visualizer(app_config, simul).run()
+            Visualizer(app_config, simul, solver).run()
+        else:
+            solver.show_all_turns()
     except (AppConfigError, ParserError, SimulationError) as e:
         print(f"{e.__class__.__name__}: {e}", file=sys.stderr)
         sys.exit(1)

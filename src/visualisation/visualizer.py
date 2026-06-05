@@ -1,5 +1,5 @@
 from src.cli import AppConfig
-from src.simul import Simulation
+from src.simul import Simulation, Solver
 from typing import Tuple, List, Dict
 import pygame
 
@@ -12,10 +12,14 @@ DRON_SIZE = 35
 
 
 class Visualizer:
-    def __init__(self, app: AppConfig, simul: Simulation) -> None:
+    def __init__(self,
+                 app: AppConfig,
+                 simul: Simulation,
+                 solver: Solver) -> None:
         self.app = app
         self.simul = simul
         self._compute_scale()
+        self.solver = solver
 
     def _compute_scale(self) -> None:
         self.min_x = min(hub.coord_x for hub in self.simul.hubs.values())
@@ -40,6 +44,7 @@ class Visualizer:
 
     def run(self) -> None:
         turn = 0
+        max_turn = self.solver.analitics["max_turn"]
         pygame.init()
         clock = pygame.time.Clock()
         screen_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -66,9 +71,12 @@ class Visualizer:
                     running = False
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RIGHT:
-                        turn += 1
+                        turn = (turn + 1) % max_turn
                     if event.key == pygame.K_LEFT:
-                        turn -= 1
+                        turn = turn - 1 if turn > 0 else 0
+                    line = self.solver._get_turn_movement(turn)
+                    if line:
+                        print(line)
             screen_surface.fill(color="grey38")
             for conn in self.simul.connections.values():
                 start = self._to_screen(conn.hub_1.coord_x, conn.hub_1.coord_y)

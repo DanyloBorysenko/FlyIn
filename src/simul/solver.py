@@ -55,18 +55,39 @@ class Solver:
         for hub, cost in self.heuristics.items():
             print(f"Hub: {hub.name}, cost: {cost}")
 
+    def _get_turn_movement(self, turn: int) -> str:
+        line = ""
+        for drone in self.simul.drones:
+            if turn > 0 and turn < len(drone.steps):
+                if drone.steps[turn - 1] == drone.steps[turn]:
+                    continue
+                line = f"{line} {drone.steps[turn].movement_str}"
+        return line
+
+    def show_all_turns(self) -> None:
+        max_turn = self.analitics["max_turn"]
+        print(max_turn)
+        for turn in range(1, max_turn + 1):
+            print(self._get_turn_movement(turn))
+
     def solve(self) -> None:
+        paths: Dict[str, List[Node]] = {}
         for drone in self.simul.drones:
             path: List[Node] = self._find_path(drone.id)
-            # if drone.id == "D2":
-            #     print(path)
             drone.steps.extend(path)
-            self.analitics[drone.id] = len(path)
             for turn, node in enumerate(path[1:-1], 1):
                 if isinstance(node.location, Hub):
                     self.reserv_map.reserve_hub(node.location, turn)
                 else:
                     self.reserv_map.reserve_loc(node.location, turn)
+            paths[drone.id] = path
+        self.analitics["paths"] = paths
+        max_turn = max(
+            [len(steps) for steps in self.analitics["paths"].values()])
+        min_turn = min(
+            [len(steps) for steps in self.analitics["paths"].values()])
+        self.analitics["max_turn"] = max_turn
+        self.analitics["min_turn"] = min_turn
 
     def _find_path(self, drone_id: str) -> List[Node]:
         possible_steps: List[Node] = []
@@ -81,33 +102,22 @@ class Solver:
         while possible_steps:
             current = heapq.heappop(possible_steps)
             curr_location = current.location
-            if drone_id == "D1":
-                print(curr_location)
             if curr_location.zone_type == ZoneType.RESTRICTED:
-                # print(f"Zone is restricted, connections: {curr_location.connections}")
                 for conn in curr_location.connections:
                     if curr_location.name in conn.name and path[-1].location.name in conn.name:
                         mid_conn_step = Node(conn, current.turn - 1, drone_id, current.h_cost, current.t_cost)
                         path.append(mid_conn_step)
             path.append(current)
-            if drone_id == "D1":
-                print(f"Path was updated - {path}")
             if curr_location == self.simul.end_hub:
                 return path
             possible_steps.clear()
             for conn in curr_location.connections:
                 neighbour = conn.get_oposssite(curr_location)
-                if drone_id == "D2":
-                    print(f"Neighbour - {neighbour}")
                 if neighbour.zone_type == ZoneType.BLOCKED:
                     continue
                 step_cost = 2 if (
                     neighbour.zone_type == ZoneType.RESTRICTED) else 1
-                if drone_id == "D2":
-                    print(f"Current.turn is {current.turn}, step cost = {step_cost}")
                 next_turn = current.turn + step_cost
-                if drone_id == "D2":
-                    print(f"Next_turn - {next_turn}")
                 if neighbour != self.simul.end_hub:
                     hub_ocup = self.reserv_map.show_hub_occupancy(
                         neighbour, next_turn)
@@ -124,8 +134,6 @@ class Solver:
                     self.heuristics[neighbour],
                     current.t_cost + step_cost)
                 heapq.heappush(possible_steps, possible_step)
-                if drone_id == "D2":
-                    print(f"Possible steps were updated - {possible_steps}")
             next_ocup = self.reserv_map.show_hub_occupancy(
                 curr_location, current.turn + 1
             )
@@ -139,44 +147,4 @@ class Solver:
                     current.turn + 1
                 )
                 heapq.heappush(possible_steps, wait_step)
-                if drone_id == "D2":
-                    print(f"Possible steps were updated - {possible_steps}")
         return []
-
-    # def solve(self) -> None:
-    #     for dron in self.simul.drones:
-    #         turn = 0
-    #         while (dron.steps[-1].location != self.simul.end_hub):
-    #             cur_loc = dron.steps[-1].location
-    #             next_loc = cur_loc
-    #             if isinstance(cur_loc, Connection):
-    #                 next_loc = cur_loc.get_oposssite(
-    #                     dron.steps[-2].location)
-    #             else:
-    #                 neighbours = cur_loc.get_neighbours()
-    #                 for hub in self.heuristics.keys():
-    #                     if hub in neighbours:
-    #                         if hub.zone_type == ZoneType.NORMAL:
-    #                             free = self.reserv_map.show_node_occupancy(
-    #                                 hub, turn + 1) < hub.max_capacity
-    #                             if free:
-    #                                 next_loc = hub
-    #                                 self.reserv_map.reserve_node(next_loc, turn + 1)
-    #                                 break
-    #                         else:
-    #                             free = self.reserv_map.show_node_occupancy(
-    #                                 hub, turn + 2) < hub.max_capacity
-    #                             if free:
-    #                                 conn = self.simul.connections["-".join(
-    #                                     sorted([cur_loc.name, hub.name]))]
-    #                                 free = self.reserv_map.show_edge_occupancy(
-    #                                     conn,
-    #                                     turn + 1
-    #                                 ) < conn.max_capacity
-    #                                 if free:
-    #                                     next_loc = conn
-    #                                     self.reserv_map.reserve_edge(next_loc, turn + 1)
-    #                                     self.reserv_map.reserve_node(hub, turn + 2)
-    #                                     break
-    #             dron.steps.append(Node(next_loc))
-    #             turn += 1
