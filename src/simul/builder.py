@@ -1,6 +1,6 @@
 from src.parser.models import ParsedElement, ParsedHub, ParsedConnection
 from src.cli import AppConfig
-from .models import Simulation, Hub, Connection, Drone, StepPath
+from .models import Simulation, Hub, Connection, Drone
 from src.domain import HubKind
 from typing import List, Dict
 
@@ -38,8 +38,6 @@ class SimulationBuilder:
         start.max_capacity = data[0].drones_count
         end.max_capacity = data[0].drones_count
         drones = [Drone(i) for i in range(1, data[0].drones_count + 1)]
-        first_step = StepPath(start)
-        [dron.steps.append(first_step) for dron in drones]
         return Simulation(
             start_hub=start,
             end_hub=end,

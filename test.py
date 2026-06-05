@@ -32,12 +32,9 @@ def run_map(map_path: Path) -> None:
 
 
 def main() -> None:
-    maps = sorted(INVALID_MAPS_DIR.rglob("*.txt"))
-
-    for map_path in maps:
-        run_map(map_path)
-    run_no_rights_map(path="invalid_maps/no_rights.txt")
-    run_map("invalid_maps/uknownfile.txt")
+    ints = [1, 2, 3, 4, 5]
+    for i in ints[1:-1]:
+        print(i)
 
 
 if __name__ == "__main__":
