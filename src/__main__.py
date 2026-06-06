@@ -14,15 +14,13 @@ def main() -> None:
         parser = MapParser(app_config)
         parsed_maps = parser.parse_maps(app_config.playlist_path)
         simulations = SimulationBuilder(app_config).build_simul_map(parsed_maps)
-        map_name, simul = simulations[0]
-        if app_config.debug:
-            print(f"\nSimulationMap was built: {simul}")
-        solver = Solver(simul, simulations)
-        solver.solve()
+        solver = Solver()
+        solver.solve(simulations)
+        name, simul = simulations[0]
         if app_config.visual:
             Visualizer(app_config, simul, solver).run()
         else:
-            solver.show_all_turns()
+            solver.show_all_turns(simul)
     except (AppConfigError, ParserError, SimulationError) as e:
         print(f"{e.__class__.__name__}: {e}", file=sys.stderr)
         sys.exit(1)

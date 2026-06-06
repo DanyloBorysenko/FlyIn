@@ -45,7 +45,7 @@ class Visualizer:
 
     def run(self) -> None:
         turn = 0
-        max_turn = self.solver.analitics["max_turn"]
+        max_turn = self.solver.get_simul_analitics(self.simul)["max_turn"]
         pygame.init()
         clock = pygame.time.Clock()
         screen_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -75,7 +75,7 @@ class Visualizer:
                         turn = (turn + 1) % max_turn
                     if event.key == pygame.K_LEFT:
                         turn = turn - 1 if turn > 0 else 0
-                    line = self.solver._get_turn_movement(turn)
+                    line = self.solver._get_turn_movement(turn, self.simul)
                     if line:
                         print(line)
             screen_surface.fill(color="grey38")

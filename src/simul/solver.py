@@ -1,4 +1,4 @@
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple, List, Any
 from .models import Hub, Connection, Simulation, Node
 from src.domain import ZoneType
 import heapq
@@ -24,17 +24,12 @@ class ReservationMap:
 
 
 class Solver:
-    def __init__(self, simul: Simulation,
-                 simulations: List[Tuple[str, Simulation]]) -> None:
-        self.simulations = simulations
-        self.simul = simul
+    def __init__(self) -> None:
         self.zone_priorities = {
             ZoneType.NORMAL: 1.0,
             ZoneType.RESTRICTED: 2.0,
             ZoneType.PRIORITY: 0.9
         }
-        self.reserv_map = ReservationMap()
-        self.analitics = {}
 
     def _calculate_heuristics(self, simul: Simulation) -> Dict[Hub, float]:
         end = simul.end_hub
@@ -52,53 +47,57 @@ class Solver:
                     heapq.heappush(heap, (new_cost, neighbour.name, neighbour))
         return dict(sorted(heuristics.items(), key=lambda item: item[1]))
 
-    def print_heuristic(self) -> None:
-        for hub, cost in self.heuristics.items():
-            print(f"Hub: {hub.name}, cost: {cost}")
-
-    def _get_turn_movement(self, turn: int) -> str:
+    def _get_turn_movement(self, turn: int, simul: Simulation) -> str:
         line = ""
-        for drone in self.simul.drones:
+        for drone in simul.drones:
             if turn > 0 and turn < len(drone.steps):
                 if drone.steps[turn - 1] == drone.steps[turn]:
                     continue
                 line = f"{line} {drone.steps[turn].movement_str}"
         return line
 
-    def show_all_turns(self) -> None:
-        max_turn = self.analitics["max_turn"]
-        print(max_turn)
+    def show_all_turns(self, simul: Simulation) -> None:
+        max_turn = self.get_simul_analitics(simul)["max_turn"]
+        print(f"Max turns: {max_turn - 1}")
         for turn in range(1, max_turn + 1):
-            print(self._get_turn_movement(turn))
+            print(self._get_turn_movement(turn, simul))
 
-    def solve(self) -> None:
+    def solve(self, simulations: List[Tuple[str, Simulation]]) -> None:
+        for name, simul in simulations:
+            reserv_map = ReservationMap()
+            for drone in simul.drones:
+                path: List[Node] = self._find_path(drone.id, simul, reserv_map)
+                drone.steps.extend(path)
+                for turn, node in enumerate(path[1:-1], 1):
+                    if isinstance(node.location, Hub):
+                        reserv_map.reserve_hub(node.location, turn)
+                    else:
+                        reserv_map.reserve_loc(node.location, turn)
+            print(f"{name} was solved")
+
+    def get_simul_analitics(self, simul: Simulation) -> Dict[str, Any]:
+        analitics = {}
         paths: Dict[str, List[Node]] = {}
-        for drone in self.simul.drones:
-            path: List[Node] = self._find_path(drone.id)
-            drone.steps.extend(path)
-            for turn, node in enumerate(path[1:-1], 1):
-                if isinstance(node.location, Hub):
-                    self.reserv_map.reserve_hub(node.location, turn)
-                else:
-                    self.reserv_map.reserve_loc(node.location, turn)
-            paths[drone.id] = path
-        self.analitics["paths"] = paths
+        for drone in simul.drones:
+            paths[drone.id] = drone.steps
+        analitics["paths"] = paths
         max_turn = max(
-            [len(steps) for steps in self.analitics["paths"].values()])
+            [len(steps) for steps in paths.values()])
         min_turn = min(
-            [len(steps) for steps in self.analitics["paths"].values()])
-        self.analitics["max_turn"] = max_turn
-        self.analitics["min_turn"] = min_turn
+            [len(steps) for steps in paths.values()])
+        analitics["max_turn"] = max_turn
+        analitics["min_turn"] = min_turn
+        return analitics
 
-    def _find_path(self, drone_id: str) -> List[Node]:
+    def _find_path(self, drone_id: str, simul: Simulation, reserv_map: ReservationMap) -> List[Node]:
         possible_steps: List[Node] = []
         path: List[Node] = []
-        heuristics = self._calculate_heuristics(self.simul)
+        heuristics = self._calculate_heuristics(simul)
         first_node = Node(
-            location=self.simul.start_hub,
+            location=simul.start_hub,
             turn=0,
             drone_id=drone_id,
-            h_cost=heuristics[self.simul.start_hub],
+            h_cost=heuristics[simul.start_hub],
             t_cost=0)
         heapq.heappush(possible_steps, first_node)
         while possible_steps:
@@ -110,7 +109,7 @@ class Solver:
                         mid_conn_step = Node(conn, current.turn - 1, drone_id, current.h_cost, current.t_cost)
                         path.append(mid_conn_step)
             path.append(current)
-            if curr_location == self.simul.end_hub:
+            if curr_location == simul.end_hub:
                 return path
             possible_steps.clear()
             for conn in curr_location.connections:
@@ -120,12 +119,12 @@ class Solver:
                 step_cost = 2 if (
                     neighbour.zone_type == ZoneType.RESTRICTED) else 1
                 next_turn = current.turn + step_cost
-                if neighbour != self.simul.end_hub:
-                    hub_ocup = self.reserv_map.show_hub_occupancy(
+                if neighbour != simul.end_hub:
+                    hub_ocup = reserv_map.show_hub_occupancy(
                         neighbour, next_turn)
                     if hub_ocup >= neighbour.max_capacity:
                         continue
-                conn_ocup = self.reserv_map.show_conn_occupancy(
+                conn_ocup = reserv_map.show_conn_occupancy(
                     conn, current.turn + 1)
                 if conn_ocup >= conn.max_capacity:
                     continue
@@ -136,10 +135,10 @@ class Solver:
                     heuristics[neighbour],
                     current.t_cost + step_cost)
                 heapq.heappush(possible_steps, possible_step)
-            next_ocup = self.reserv_map.show_hub_occupancy(
+            next_ocup = reserv_map.show_hub_occupancy(
                 curr_location, current.turn + 1
             )
-            if (curr_location == self.simul.start_hub
+            if (curr_location == simul.start_hub
                or next_ocup <= curr_location.max_capacity):
                 wait_step = Node(
                     curr_location,

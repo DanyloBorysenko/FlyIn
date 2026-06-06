@@ -53,5 +53,5 @@ class SimulationBuilder:
         first_simul = self.build_simulation(parsed_maps.pop(self.app.map_path))
         simulations.append((self.app.map_path, first_simul))
         for map_name, parsed_els in parsed_maps.items():
-            simulations.append((map_name, parsed_els))
+            simulations.append((map_name, self.build_simulation(parsed_els)))
         return simulations
