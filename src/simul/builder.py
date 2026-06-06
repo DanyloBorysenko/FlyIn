@@ -6,7 +6,9 @@ from typing import List, Dict
 
 
 class SimulationBuilder:
-    def __init__(self, app: AppConfig) -> None:
+    def __init__(self,
+                 app: AppConfig,
+                 parsed_maps: Dict[str, List[ParsedElement]]) -> None:
         self.app = app
 
     def _build_hubs(self, data: List[ParsedElement]) -> Dict[str, Hub]:

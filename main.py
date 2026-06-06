@@ -3,7 +3,7 @@ from src.cli import AppConfig
 
 
 def main():
-    parsed = MapParser(AppConfig()).parse()
+    parsed = MapParser(AppConfig()).parse_map()
     print(parsed)
 
 

@@ -6,6 +6,7 @@ from .models import (ParsedElement, ParsedKeyword, ParsedNbDrones, ParsedHub,
                      ConnectionMetaKey, HubMetadata,
                      ConnectionMetadata)
 from .errors import ParserError
+from pathlib import Path
 
 
 class MapParser:
@@ -196,18 +197,18 @@ class MapParser:
             raise ParserError("Expected exactly 1 end_hub, "
                               f"got {end_hubs}")
 
-    def parse(self) -> List[ParsedElement]:
+    def parse_map(self, map_path: str) -> List[ParsedElement]:
         try:
-            with open(self.app.map_path, "r") as f:
+            with open(map_path, "r") as f:
                 lines = f.readlines()
                 if self.app.debug:
-                    print(f"File '{self.app.map_path}' was read")
+                    print(f"File '{map_path}' was read")
                     print(f"\nLines: {lines}\n")
         except FileNotFoundError:
             raise ParserError(f"File '{self.app.map_path}' doesn't exist")
         except PermissionError:
             raise ParserError("No reading permission for file "
-                              f"'{self.app.map_path}'")
+                              f"'{map_path}'")
         parsed_els: List[ParsedElement] = []
         for ind, line in enumerate(lines):
             if line.startswith("#") or line == "\n":
@@ -220,3 +221,35 @@ class MapParser:
             raise ParserError("No map elements were found")
         self._validate(parsed_els)
         return parsed_els
+
+    def parse_maps(
+            self,
+            root_path: str) -> Dict[str, List[ParsedElement]]:
+        root = Path(root_path)
+        map_provided = Path(self.app.map_path)
+        if not map_provided.exists():
+            raise ParserError(f"file '{map_provided}' doesn't exist")
+        if not root.exists():
+            raise ParserError(f"dir '{root}' doesn't exist")
+        playlist = root.rglob("*")
+        if root not in map_provided.parents:
+            return {map_provided: self.parse_map(map_provided)}
+        order = {
+            "easy": 1,
+            "medium": 2,
+            "hard": 3,
+            "challenger": 4
+        }
+        files = [file for file in playlist if file.is_file()]
+        sorted_files = sorted(files, key=lambda f: (
+            order.get(f.parent.name, 0),
+            f.name)
+            )
+        maps: Dict[str, List[ParsedElement]] = {}
+        for map_file in sorted_files:
+            name = str(map_file)
+            try:
+                maps[name] = self.parse_map(name)
+            except ParserError as e:
+                raise ParserError(f"{e}, file name: {name}")
+        return maps

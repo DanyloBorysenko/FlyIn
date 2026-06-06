@@ -7,7 +7,8 @@ from src.parser.models import (ParsedNbDrones, ParsedHub, ParsedConnection,
 
 def test_default_metadata() -> None:
     app = AppConfig(map_path="tests/parser/valid_maps/default_metadata.txt")
-    actual = MapParser(app).parse()
+    actual = MapParser(app).parse_map(
+        "tests/parser/valid_maps/default_metadata.txt")
     expected = [
         ParsedNbDrones(line_ind=1, drones_count=2),
         ParsedHub(
@@ -60,7 +61,7 @@ def test_full_metadata() -> None:
         map_path="tests/parser/valid_maps/full_metadata.txt"
     )
 
-    actual = MapParser(app).parse()
+    actual = MapParser(app).parse_map("tests/parser/valid_maps/full_metadata.txt")
 
     expected = [
         ParsedNbDrones(
@@ -162,4 +163,5 @@ def test_full_metadata() -> None:
 def test_line_with_spaces_only() -> None:
     app = AppConfig(
         map_path="tests/parser/valid_maps/line_with_spaces_only.txt")
-    MapParser(app=app).parse()
+    MapParser(app=app).parse_map(
+        "tests/parser/valid_maps/line_with_spaces_only.txt")

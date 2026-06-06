@@ -4,6 +4,7 @@ from enum import Enum
 
 class Flag(Enum):
     MAP_PATH = "--map-path"
+    PLAYLIST_PATH = "--playlist-path"
     DEBUG = "--debug"
     VISUAL = "--visual"
 
@@ -18,5 +19,6 @@ class Flag(Enum):
 @dataclass
 class AppConfig:
     map_path: str = "maps/easy/01_linear_path.txt"
+    playlist_path: str = "maps"
     debug: bool = False
     visual: bool = False

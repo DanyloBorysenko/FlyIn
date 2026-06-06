@@ -10,9 +10,11 @@ def build_app_config(argv: list[str]) -> AppConfig:
         val: str | bool
         for arg in argv[1:]:
             if "=" in arg:
-                if not arg.startswith(Flag.MAP_PATH.value):
+                if not (arg.startswith(Flag.MAP_PATH.value)
+                   or arg.startswith(Flag.PLAYLIST_PATH.value)):
                     raise AppConfigError("Using '=' is allowed only "
-                                         f"with {Flag.MAP_PATH.value}")
+                                         f"with '{Flag.MAP_PATH.value}'"
+                                         f" and '{Flag.PLAYLIST_PATH}'")
                 key, val = arg.split("=", maxsplit=1)
             else:
                 key, val = arg, True

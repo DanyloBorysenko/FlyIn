@@ -11,8 +11,12 @@ def main() -> None:
         app_config = build_app_config(sys.argv)
         if app_config.debug:
             print(f"AppConfig was created: {app_config}")
-        parsed_elements = MapParser(app_config).parse()
-        simul = SimulationBuilder(app_config).build_simulation(parsed_elements)
+        parser = MapParser(app_config)
+        parsed_elements = parser.parse_map(app_config.map_path)
+        parsed_maps = parser.parse_maps(app_config.playlist_path)
+        for name, els in parsed_maps.items():
+            print(f"\nName: {name}, els: {els}")
+        simul = SimulationBuilder(app_config, parsed_maps).build_simulation(parsed_elements)
         if app_config.debug:
             print(f"\nSimulationMap was built: {simul}")
         solver = Solver(simul)

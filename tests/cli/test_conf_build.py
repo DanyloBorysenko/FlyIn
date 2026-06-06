@@ -11,12 +11,18 @@ def test_unknown_flag() -> None:
 def test_default_args() -> None:
     app = build_app_config(["filename"])
     assert app.map_path == "maps/easy/01_linear_path.txt"
+    assert app.playlist_path == "maps"
     assert app.debug is False
 
 
 def test_map_flag() -> None:
     app = build_app_config(["filename", "--map-path=new"])
     assert app.map_path == "new"
+
+
+def test_playlist_flag() -> None:
+    app = build_app_config(["filename", "--playlist-path=new"])
+    assert app.playlist_path == "new"
 
 
 def test_debug_flag() -> None:

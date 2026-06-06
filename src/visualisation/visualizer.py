@@ -6,6 +6,7 @@ import pygame
 
 WINDOW_WIDTH = 1700
 WINDOW_HEIGHT = 900
+MAP_HEIGHT = WINDOW_HEIGHT * 0.75
 PADDING = 60
 HUB_SIZE = 40
 DRON_SIZE = 35
@@ -36,10 +37,10 @@ class Visualizer:
             new_x = int((x - self.min_x) / range_x *
                         (WINDOW_WIDTH - 2 * PADDING) + PADDING)
         if range_y == 0:
-            new_y = WINDOW_HEIGHT // 2
+            new_y = MAP_HEIGHT // 2
         else:
             new_y = int((y - self.min_y) / range_y *
-                        (WINDOW_HEIGHT - 2 * PADDING) + PADDING)
+                        (MAP_HEIGHT - 2 * PADDING) + PADDING)
         return new_x, new_y
 
     def run(self) -> None:
@@ -78,6 +79,12 @@ class Visualizer:
                     if line:
                         print(line)
             screen_surface.fill(color="grey38")
+            # pygame.draw.line(screen_surface, "black",
+            #                  (0, MAP_HEIGHT), (WINDOW_WIDTH, MAP_HEIGHT), 5)
+            pygame.draw.rect(
+                screen_surface,
+                "grey48",
+                (0, MAP_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT), 0, 10,)
             for conn in self.simul.connections.values():
                 start = self._to_screen(conn.hub_1.coord_x, conn.hub_1.coord_y)
                 end = self._to_screen(conn.hub_2.coord_x, conn.hub_2.coord_y)
