@@ -153,8 +153,6 @@ class MapParser:
         try:
             first_token = ParsedKeyword(first_key[:-1])
             parsed_el = helpers[first_token](line_els, line_ind)
-            if self.app.debug:
-                print(f"Element was parsed: {parsed_el}")
             return parsed_el
         except ValueError:
             raise ParserError(f"Unknown map element '{first_key}'", line_ind)
@@ -201,9 +199,6 @@ class MapParser:
         try:
             with open(map_path, "r") as f:
                 lines = f.readlines()
-                if self.app.debug:
-                    print(f"File '{map_path}' was read")
-                    print(f"\nLines: {lines}\n")
         except FileNotFoundError:
             raise ParserError(f"File '{self.app.map_path}' doesn't exist")
         except PermissionError:
@@ -252,4 +247,8 @@ class MapParser:
                 maps[name] = self.parse_map(name)
             except ParserError as e:
                 raise ParserError(f"{e}, file name: {name}")
+        if self.app.debug:
+            for name, els in maps.items():
+                print(f"\nMap: '{name}' was parsed."
+                      f"\nResult:\n{"\n".join([str(el) for el in els])}")
         return maps

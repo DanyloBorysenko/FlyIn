@@ -24,19 +24,20 @@ class ReservationMap:
 
 
 class Solver:
-    def __init__(self, simul: Simulation) -> None:
+    def __init__(self, simul: Simulation,
+                 simulations: List[Tuple[str, Simulation]]) -> None:
+        self.simulations = simulations
         self.simul = simul
         self.zone_priorities = {
             ZoneType.NORMAL: 1.0,
             ZoneType.RESTRICTED: 2.0,
             ZoneType.PRIORITY: 0.9
         }
-        self.heuristics = self._calculate_heuristics()
         self.reserv_map = ReservationMap()
         self.analitics = {}
 
-    def _calculate_heuristics(self) -> Dict[Hub, float]:
-        end = self.simul.end_hub
+    def _calculate_heuristics(self, simul: Simulation) -> Dict[Hub, float]:
+        end = simul.end_hub
         heuristics = {end: 0.0}
         heap = [(0.0, end.name, end)]
         while heap:
@@ -92,11 +93,12 @@ class Solver:
     def _find_path(self, drone_id: str) -> List[Node]:
         possible_steps: List[Node] = []
         path: List[Node] = []
+        heuristics = self._calculate_heuristics(self.simul)
         first_node = Node(
             location=self.simul.start_hub,
             turn=0,
             drone_id=drone_id,
-            h_cost=self.heuristics[self.simul.start_hub],
+            h_cost=heuristics[self.simul.start_hub],
             t_cost=0)
         heapq.heappush(possible_steps, first_node)
         while possible_steps:
@@ -131,7 +133,7 @@ class Solver:
                     neighbour,
                     next_turn,
                     drone_id,
-                    self.heuristics[neighbour],
+                    heuristics[neighbour],
                     current.t_cost + step_cost)
                 heapq.heappush(possible_steps, possible_step)
             next_ocup = self.reserv_map.show_hub_occupancy(
@@ -143,7 +145,7 @@ class Solver:
                     curr_location,
                     current.turn + 1,
                     drone_id,
-                    self.heuristics[curr_location],
+                    heuristics[curr_location],
                     current.turn + 1
                 )
                 heapq.heappush(possible_steps, wait_step)

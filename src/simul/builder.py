@@ -2,13 +2,11 @@ from src.parser.models import ParsedElement, ParsedHub, ParsedConnection
 from src.cli import AppConfig
 from .models import Simulation, Hub, Connection, Drone
 from src.domain import HubKind
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 
 class SimulationBuilder:
-    def __init__(self,
-                 app: AppConfig,
-                 parsed_maps: Dict[str, List[ParsedElement]]) -> None:
+    def __init__(self, app: AppConfig) -> None:
         self.app = app
 
     def _build_hubs(self, data: List[ParsedElement]) -> Dict[str, Hub]:
@@ -46,3 +44,14 @@ class SimulationBuilder:
             hubs=hubs,
             connections=connections,
             drones=drones)
+
+    def build_simul_map(
+            self,
+            parsed_maps: Dict[str, List[ParsedElement]]
+            ) -> List[Tuple[str, Simulation]]:
+        simulations: List[Tuple[str, Simulation]] = list()
+        first_simul = self.build_simulation(parsed_maps.pop(self.app.map_path))
+        simulations.append((self.app.map_path, first_simul))
+        for map_name, parsed_els in parsed_maps.items():
+            simulations.append((map_name, parsed_els))
+        return simulations
