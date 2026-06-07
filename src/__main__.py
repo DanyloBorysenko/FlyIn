@@ -25,7 +25,7 @@ def main() -> None:
     except (AppConfigError, ParserError, SimulationError) as e:
         print(f"{e.__class__.__name__}: {e}", file=sys.stderr)
     except Exception as e:
-        print(f"Unknown error: {e.__class__.__name__}: {e}")
+        print(f"Unknown error: {e}")
         sys.exit(1)
 
 
