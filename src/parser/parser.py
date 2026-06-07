@@ -228,7 +228,7 @@ class MapParser:
             raise ParserError(f"dir '{root}' doesn't exist")
         playlist = root.rglob("*")
         if root not in map_provided.parents:
-            return {map_provided: self.parse_map(map_provided)}
+            return {str(map_provided): self.parse_map(str(map_provided))}
         order = {
             "easy": 1,
             "medium": 2,

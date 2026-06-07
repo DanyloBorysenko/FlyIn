@@ -29,16 +29,19 @@ class SimulationBuilder:
                 connections[conn.name] = conn
         return connections
 
-    def build_simulation(self, data: List[ParsedElement]) -> Simulation:
-        hubs: Dict[str, Hub] = self._build_hubs(data)
+    def build_simulation(self,
+                         map_name: str,
+                         parsed_els: List[ParsedElement]) -> Simulation:
+        hubs: Dict[str, Hub] = self._build_hubs(parsed_els)
         connections: Dict[str, Connection] = self._build_connections(
-            data, hubs)
+            parsed_els, hubs)
         start = [hub for hub in hubs.values() if hub.kind == HubKind.START][0]
         end = [hub for hub in hubs.values() if hub.kind == HubKind.END][0]
-        start.max_capacity = data[0].drones_count
-        end.max_capacity = data[0].drones_count
-        drones = [Drone(i) for i in range(1, data[0].drones_count + 1)]
+        start.max_capacity = parsed_els[0].drones_count
+        end.max_capacity = parsed_els[0].drones_count
+        drones = [Drone(i) for i in range(1, parsed_els[0].drones_count + 1)]
         return Simulation(
+            name=map_name,
             start_hub=start,
             end_hub=end,
             hubs=hubs,
@@ -49,10 +52,11 @@ class SimulationBuilder:
     def build_simul_map(
             self,
             parsed_maps: Dict[str, List[ParsedElement]]
-            ) -> List[Tuple[str, Simulation]]:
-        simulations: List[Tuple[str, Simulation]] = list()
-        first_simul = self.build_simulation(parsed_maps.pop(self.app.map_path))
-        simulations.append((self.app.map_path, first_simul))
+            ) -> List[Simulation]:
+        simulations: List[Simulation] = list()
+        first_simul = self.build_simulation(
+            self.app.map_path, parsed_maps.pop(self.app.map_path))
+        simulations.append(first_simul)
         for map_name, parsed_els in parsed_maps.items():
-            simulations.append((map_name, self.build_simulation(parsed_els)))
+            simulations.append(self.build_simulation(map_name, parsed_els))
         return simulations

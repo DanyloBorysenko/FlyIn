@@ -187,6 +187,7 @@ class Analytics:
 
 @dataclass
 class Simulation:
+    name: str
     start_hub: Hub
     end_hub: Hub
     hubs: Dict[str, Hub]

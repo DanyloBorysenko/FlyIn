@@ -15,9 +15,13 @@ DRON_SIZE = 35
 class Visualizer:
     def __init__(self,
                  app: AppConfig,
-                 simul: Simulation) -> None:
+                 simulations: List[Simulation]) -> None:
         self.app = app
-        self.simul = simul
+        self.simulations = simulations
+        self.current_map_ind = 0
+        self.current_turn = 0
+        self.maps_count = len(self.simulations)
+        self.simul = simulations[self.current_map_ind]
         self._compute_scale()
 
     def _compute_scale(self) -> None:
@@ -51,7 +55,6 @@ class Visualizer:
         return line
 
     def run(self) -> None:
-        turn = 0
         max_turn = self.simul.analitics.max_turn
         pygame.init()
         clock = pygame.time.Clock()
@@ -78,16 +81,20 @@ class Visualizer:
                 if event.type == pygame.QUIT:
                     running = False
                 if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP:
+                        self.current_map_ind = self.current_map_ind - 1 if self.current_map_ind > 0 else 0
+                        print(f"map was changed. current map: {self.simulations[self.current_map_ind].name}")
+                    if event.key == pygame.K_DOWN:
+                        self.current_map_ind = (self.current_map_ind + 1) % self.maps_count
+                        print(f"map was changed. current map: {self.simulations[self.current_map_ind].name}")
                     if event.key == pygame.K_RIGHT:
-                        turn = (turn + 1) % max_turn
+                        self.current_turn = (self.current_turn + 1) % max_turn
                     if event.key == pygame.K_LEFT:
-                        turn = turn - 1 if turn > 0 else 0
-                    line = self._get_turn_movement(turn)
+                        self.current_turn = self.current_turn - 1 if self.current_turn > 0 else 0
+                    line = self._get_turn_movement(self.current_turn)
                     if line:
                         print(line)
             screen_surface.fill(color="grey38")
-            # pygame.draw.line(screen_surface, "black",
-            #                  (0, MAP_HEIGHT), (WINDOW_WIDTH, MAP_HEIGHT), 5)
             pygame.draw.rect(
                 screen_surface,
                 "grey48",
@@ -117,10 +124,10 @@ class Visualizer:
                 screen_surface.blit(zone_type_surf, zone_type_rec)
             for dron, dron_rec in drones.items():
                 screen_surface.blit(scaled_dron, dron_rec)
-                if turn < len(dron.steps) and turn >= 0:
+                if self.current_turn < len(dron.steps) and self.current_turn >= 0:
                     next_x, next_y = self._to_screen(
-                        dron.steps[turn].location.coord_x,
-                        dron.steps[turn].location.coord_y)
+                        dron.steps[self.current_turn].location.coord_x,
+                        dron.steps[self.current_turn].location.coord_y)
                     next = pygame.math.Vector2((next_x, next_y))
                     current = pygame.math.Vector2(
                         dron_rec.center).move_towards(next, speed)

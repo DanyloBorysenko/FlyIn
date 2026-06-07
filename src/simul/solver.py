@@ -62,8 +62,8 @@ class Solver:
         for turn in range(1, max_turn + 1):
             print(self._get_turn_movement(turn, simul))
 
-    def solve(self, simulations: List[Tuple[str, Simulation]]) -> None:
-        for name, simul in simulations:
+    def solve(self, simulations: List[Simulation]) -> None:
+        for simul in simulations:
             reserv_map = ReservationMap()
             for drone in simul.drones:
                 path: List[Node] = self._find_path(drone.id, simul, reserv_map)

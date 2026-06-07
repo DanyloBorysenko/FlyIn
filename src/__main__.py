@@ -13,17 +13,19 @@ def main() -> None:
             print(f"AppConfig was created: {app_config}")
         parser = MapParser(app_config)
         parsed_maps = parser.parse_maps(app_config.playlist_path)
+        print(parsed_maps)
         simulations = SimulationBuilder(app_config).build_simul_map(
             parsed_maps)
         solver = Solver()
         solver.solve(simulations)
-        name, simul = simulations[0]
         if app_config.visual:
-            Visualizer(app_config, simul).run()
+            Visualizer(app_config, simulations).run()
         else:
-            solver.show_all_turns(simul)
+            solver.show_all_turns(simulations[0])
     except (AppConfigError, ParserError, SimulationError) as e:
         print(f"{e.__class__.__name__}: {e}", file=sys.stderr)
+    except Exception as e:
+        print(f"Unknown error: {e.__class__.__name__}: {e}")
         sys.exit(1)
 
 
