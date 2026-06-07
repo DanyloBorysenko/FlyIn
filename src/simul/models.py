@@ -180,12 +180,19 @@ class Drone:
 
 
 @dataclass
+class Analytics:
+    max_turn: int
+    min_turn: int
+
+
+@dataclass
 class Simulation:
     start_hub: Hub
     end_hub: Hub
     hubs: Dict[str, Hub]
     connections: Dict[str, Connection]
     drones: List[Drone]
+    analitics: Analytics
 
     def __repr__(self) -> str:
         return (f"\nStart hub: {self.start_hub}\n"

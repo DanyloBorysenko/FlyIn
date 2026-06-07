@@ -1,5 +1,5 @@
 from typing import Dict, Tuple, List, Any
-from .models import Hub, Connection, Simulation, Node
+from .models import Hub, Connection, Simulation, Node, Analytics
 from src.domain import ZoneType
 import heapq
 
@@ -57,7 +57,7 @@ class Solver:
         return line
 
     def show_all_turns(self, simul: Simulation) -> None:
-        max_turn = self.get_simul_analitics(simul)["max_turn"]
+        max_turn = simul.analitics.max_turn
         print(f"Max turns: {max_turn - 1}")
         for turn in range(1, max_turn + 1):
             print(self._get_turn_movement(turn, simul))
@@ -73,21 +73,17 @@ class Solver:
                         reserv_map.reserve_hub(node.location, turn)
                     else:
                         reserv_map.reserve_loc(node.location, turn)
-            print(f"{name} was solved")
+            simul.analitics = self.get_simul_analitics(simul)
 
-    def get_simul_analitics(self, simul: Simulation) -> Dict[str, Any]:
-        analitics = {}
+    def get_simul_analitics(self, simul: Simulation) -> Analytics:
         paths: Dict[str, List[Node]] = {}
         for drone in simul.drones:
             paths[drone.id] = drone.steps
-        analitics["paths"] = paths
         max_turn = max(
             [len(steps) for steps in paths.values()])
         min_turn = min(
             [len(steps) for steps in paths.values()])
-        analitics["max_turn"] = max_turn
-        analitics["min_turn"] = min_turn
-        return analitics
+        return Analytics(max_turn, min_turn)
 
     def _find_path(self, drone_id: str, simul: Simulation, reserv_map: ReservationMap) -> List[Node]:
         possible_steps: List[Node] = []

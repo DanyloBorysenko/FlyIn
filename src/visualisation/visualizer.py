@@ -15,12 +15,10 @@ DRON_SIZE = 35
 class Visualizer:
     def __init__(self,
                  app: AppConfig,
-                 simul: Simulation,
-                 solver: Solver) -> None:
+                 simul: Simulation) -> None:
         self.app = app
         self.simul = simul
         self._compute_scale()
-        self.solver = solver
 
     def _compute_scale(self) -> None:
         self.min_x = min(hub.coord_x for hub in self.simul.hubs.values())
@@ -43,9 +41,18 @@ class Visualizer:
                         (MAP_HEIGHT - 2 * PADDING) + PADDING)
         return new_x, new_y
 
+    def _get_turn_movement(self, turn: int) -> str:
+        line = ""
+        for drone in self.simul.drones:
+            if turn > 0 and turn < len(drone.steps):
+                if drone.steps[turn - 1] == drone.steps[turn]:
+                    continue
+                line = f"{line} {drone.steps[turn].movement_str}"
+        return line
+
     def run(self) -> None:
         turn = 0
-        max_turn = self.solver.get_simul_analitics(self.simul)["max_turn"]
+        max_turn = self.simul.analitics.max_turn
         pygame.init()
         clock = pygame.time.Clock()
         screen_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -75,7 +82,7 @@ class Visualizer:
                         turn = (turn + 1) % max_turn
                     if event.key == pygame.K_LEFT:
                         turn = turn - 1 if turn > 0 else 0
-                    line = self.solver._get_turn_movement(turn, self.simul)
+                    line = self._get_turn_movement(turn)
                     if line:
                         print(line)
             screen_surface.fill(color="grey38")
