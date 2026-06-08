@@ -15,13 +15,17 @@ DRON_SIZE = 35
 
 
 class Footer:
-    def __init__(self, simul: Simulation) -> None:
+    def __init__(self, simul: Simulation, speed: int) -> None:
         self.font = pygame.font.Font(size=40)
+        self.info_panel_font = pygame.font.Font(size=30)
         self.footer_rect = pygame.rect.FRect(
             0, MAP_HEIGHT, WINDOW_WIDTH, ACTUAL_FOOTER_HEIGHT)
         self._draw_control_panel()
         self.update_map_name(simul.name)
-        self._update_drones_count(len(simul.drones))
+        self._update_drones_count(simul.analitics.drones_count)
+        self._update_speed(speed)
+        self._update_max_turn(simul.analitics.max_turn)
+        self._update_curr_turn(0)
 
     def update_map_name(self, new_name: str) -> None:
         self.map_name = new_name
@@ -48,12 +52,36 @@ class Footer:
             self.footer_rect.midbottom[1] - FOOTER_PADDING)
 
     def _update_drones_count(self, count: int) -> None:
-        self.drones_count_surf = self.font.render(
+        self.drones_count_surf = self.info_panel_font.render(
             f"drones count: {count}", True, "yellow")
         self.drones_count_rect = self.drones_count_surf.get_frect()
         self.drones_count_rect.topleft = (
             self.footer_rect.topleft[0] + FOOTER_PADDING,
-            self.footer_rect.topleft[1] + FOOTER_PADDING)
+            self.footer_rect.topleft[1] + FOOTER_PADDING * 3)
+
+    def _update_speed(self, value: int) -> None:
+        self.speed_surf = self.info_panel_font.render(
+            f"speed: {value}", True, "yellow")
+        self.speed_rect = self.speed_surf.get_frect()
+        self.speed_rect.topleft = (
+            self.drones_count_rect.bottomleft[0],
+            self.drones_count_rect.bottomleft[1] + 5)
+
+    def _update_max_turn(self, value: int) -> None:
+        self.max_turn_surf = self.info_panel_font.render(
+            f"MAX TURN: {value}", True, "yellow")
+        self.max_turn_rect = self.max_turn_surf.get_frect()
+        self.max_turn_rect.topleft = (
+            self.speed_rect.bottomleft[0],
+            self.speed_rect.bottomleft[1] + 5)
+
+    def _update_curr_turn(self, value: int) -> None:
+        self.curr_turn_surf = self.info_panel_font.render(
+            f"CURRENT TURN: {value}", True, "yellow")
+        self.curr_turn_rect = self.curr_turn_surf.get_frect()
+        self.curr_turn_rect.topleft = (
+            self.max_turn_rect.bottomleft[0],
+            self.max_turn_rect.bottomleft[1] + 5)
 
 
 class Visualizer:
@@ -67,7 +95,7 @@ class Visualizer:
         self.maps_count = len(self.simulations)
         self.simul = simulations[self.current_map_ind]
         self._compute_scale()
-        self.speed = 1.0
+        self.speed = 1
         self.distance = 2.0
 
     def _compute_scale(self) -> None:
@@ -121,6 +149,9 @@ class Visualizer:
         self.footer.update_map_name(self.simul.name)
         self._compute_scale()
         self._update_hub_text_cache()
+        self.footer._update_drones_count(self.simul.analitics.drones_count)
+        self.footer._update_max_turn(self.simul.analitics.max_turn)
+        self.footer._update_curr_turn(0)
         self._create_drones()
         print()
 
@@ -133,21 +164,32 @@ class Visualizer:
             self.current_map_ind = (self.current_map_ind + 1) % self.maps_count
             self._reload()
         if event.key == pygame.K_RIGHT:
-            if self.current_turn == self.simul.analitics.max_turn - 1:
+            if self.current_turn == self.simul.analitics.max_turn:
                 self._reload()
             else:
                 self.current_turn = self.current_turn + 1
+                self.footer._update_curr_turn(self.current_turn)
             line = self._get_turn_movement(self.current_turn)
             if line:
                 print(line)
         if event.key == pygame.K_LEFT:
             self.current_turn = (
                 self.current_turn - 1 if self.current_turn > 0 else 0)
+            self.footer._update_curr_turn(self.current_turn)
             line = self._get_turn_movement(self.current_turn)
             if line:
                 print(line)
         if event.key == pygame.K_r:
             self._reload()
+        if event.key == pygame.K_1:
+            self.speed = 1
+            self.footer._update_speed(self.speed)
+        if event.key == pygame.K_2:
+            self.speed = 2
+            self.footer._update_speed(self.speed)
+        if event.key == pygame.K_3:
+            self.speed = 3
+            self.footer._update_speed(self.speed)
 
     def _draw_hubs(self) -> None:
         for hub in self.simul.hubs.values():
@@ -191,7 +233,7 @@ class Visualizer:
             (WINDOW_WIDTH, WINDOW_HEIGHT))
         pygame.display.set_caption("FLY-IN")
         self.hub_text_font = pygame.font.Font(size=12)
-        self.footer = Footer(self.simul)
+        self.footer = Footer(self.simul, self.speed)
         self._update_hub_text_cache()
         dron = pygame.image.load("images/player.png")
         self.scaled_dron = pygame.transform.scale(
@@ -214,6 +256,12 @@ class Visualizer:
                                      self.footer.control_panel_rect)
             self.screen_surface.blit(self.footer.drones_count_surf,
                                      self.footer.drones_count_rect)
+            self.screen_surface.blit(self.footer.speed_surf,
+                                     self.footer.speed_rect)
+            self.screen_surface.blit(self.footer.max_turn_surf,
+                                     self.footer.max_turn_rect)
+            self.screen_surface.blit(self.footer.curr_turn_surf,
+                                     self.footer.curr_turn_rect)
             for conn in self.simul.connections.values():
                 start = self._to_screen(conn.hub_1.coord_x, conn.hub_1.coord_y)
                 end = self._to_screen(conn.hub_2.coord_x, conn.hub_2.coord_y)

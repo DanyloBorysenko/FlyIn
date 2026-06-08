@@ -77,13 +77,15 @@ class Solver:
 
     def get_simul_analitics(self, simul: Simulation) -> Analytics:
         paths: Dict[str, List[Node]] = {}
+        drones_count = 0
         for drone in simul.drones:
             paths[drone.id] = drone.steps
+            drones_count += 1
         max_turn = max(
             [len(steps) for steps in paths.values()])
         min_turn = min(
             [len(steps) for steps in paths.values()])
-        return Analytics(max_turn, min_turn)
+        return Analytics(max_turn - 1, min_turn - 1, drones_count)
 
     def _find_path(self,
                    drone_id: str,

@@ -183,6 +183,7 @@ class Drone:
 class Analytics:
     max_turn: int
     min_turn: int
+    drones_count: int
 
 
 @dataclass

@@ -2,7 +2,7 @@ from src.parser.models import ParsedElement, ParsedHub, ParsedConnection
 from src.cli import AppConfig
 from .models import Simulation, Hub, Connection, Drone
 from src.domain import HubKind
-from typing import List, Dict, Tuple
+from typing import List, Dict
 
 
 class SimulationBuilder:
