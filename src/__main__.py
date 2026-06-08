@@ -13,7 +13,6 @@ def main() -> None:
             print(f"AppConfig was created: {app_config}")
         parser = MapParser(app_config)
         parsed_maps = parser.parse_maps(app_config.playlist_path)
-        print(parsed_maps)
         simulations = SimulationBuilder(app_config).build_simul_map(
             parsed_maps)
         solver = Solver()

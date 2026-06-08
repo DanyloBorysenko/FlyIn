@@ -23,7 +23,8 @@ class Visualizer:
         self.maps_count = len(self.simulations)
         self.simul = simulations[self.current_map_ind]
         self._compute_scale()
-        self.speed = 2.0
+        self.speed = 1.0
+        self.distance = 2.0
 
     def _compute_scale(self) -> None:
         self.min_x = min(hub.coord_x for hub in self.simul.hubs.values())
@@ -67,7 +68,8 @@ class Visualizer:
     def _create_drones(self) -> None:
         self.dron_rect.center = self._to_screen(
             self.simul.start_hub.coord_x, self.simul.start_hub.coord_y)
-        self.drones = {dron: self.dron_rect.copy() for dron in self.simul.drones}
+        self.drones = {dron: self.dron_rect.copy()
+                       for dron in self.simul.drones}
 
     def _reload(self) -> None:
         self.simul = self.simulations[self.current_map_ind]
@@ -76,16 +78,77 @@ class Visualizer:
         self._update_hub_text_cache()
         self._create_drones()
 
+    def execute_event(self, event: pygame.event.Event) -> None:
+        if event.key == pygame.K_UP:
+            self.current_map_ind = (
+                self.current_map_ind - 1 if self.current_map_ind > 0 else 0)
+            self._reload()
+        if event.key == pygame.K_DOWN:
+            self.current_map_ind = (self.current_map_ind + 1) % self.maps_count
+            self._reload()
+        if event.key == pygame.K_RIGHT:
+            if self.current_turn == self.simul.analitics.max_turn - 1:
+                self._reload()
+            else:
+                self.current_turn = self.current_turn + 1
+            line = self._get_turn_movement(self.current_turn)
+            if line:
+                print(line)
+        if event.key == pygame.K_LEFT:
+            self.current_turn = (
+                self.current_turn - 1 if self.current_turn > 0 else 0)
+            line = self._get_turn_movement(self.current_turn)
+            if line:
+                print(line)
+        if event.key == pygame.K_r:
+            self._reload()
+
+    def draw_hubs(self) -> None:
+        for hub in self.simul.hubs.values():
+            surface = pygame.Surface((HUB_SIZE, HUB_SIZE))
+            try:
+                surface.fill(hub.color if hub.color else "white")
+            except ValueError:
+                surface.fill("springgreen3")
+            hub_rec = surface.get_frect()
+            hub_rec.center = self._to_screen(hub.coord_x, hub.coord_y)
+            self.screen_surface.blit(surface, hub_rec)
+
+            name_surf, zone_type_surf = self.hub_text_cache[hub.name]
+            name_rec = name_surf.get_frect()
+            name_rec.center = (hub_rec.midbottom[0],
+                               hub_rec.midbottom[1] + 10)
+            self.screen_surface.blit(name_surf, name_rec)
+            zone_type_rec = zone_type_surf.get_frect()
+            zone_type_rec.center = (name_rec.midbottom[0],
+                                    name_rec.midbottom[1] + 15)
+            self.screen_surface.blit(zone_type_surf, zone_type_rec)
+
+    def draw_drones(self) -> None:
+        for dron, dron_rec in self.drones.items():
+            self.screen_surface.blit(self.scaled_dron, dron_rec)
+            if (self.current_turn < len(dron.steps)
+               and self.current_turn >= 0):
+                next_x, next_y = self._to_screen(
+                    dron.steps[self.current_turn].location.coord_x,
+                    dron.steps[self.current_turn].location.coord_y)
+                next = pygame.math.Vector2((next_x, next_y))
+                current = pygame.math.Vector2(
+                    dron_rec.center).move_towards(
+                        next, self.speed * self.distance)
+                dron_rec.center = current
+
     def run(self) -> None:
         pygame.init()
         clock = pygame.time.Clock()
-        screen_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+        self.screen_surface = pygame.display.set_mode(
+            (WINDOW_WIDTH, WINDOW_HEIGHT))
         pygame.display.set_caption("FLY-IN")
         self._update_hub_text_cache()
         dron = pygame.image.load("images/player.png")
-        scaled_dron = pygame.transform.scale(
+        self.scaled_dron = pygame.transform.scale(
             dron, (DRON_SIZE, DRON_SIZE)).convert_alpha()
-        self.dron_rect = scaled_dron.get_frect()
+        self.dron_rect = self.scaled_dron.get_frect()
         self._create_drones()
         running = True
         while running:
@@ -94,64 +157,17 @@ class Visualizer:
                 if event.type == pygame.QUIT:
                     running = False
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_UP:
-                        self.current_map_ind = self.current_map_ind - 1 if self.current_map_ind > 0 else 0
-                        self._reload()
-                    if event.key == pygame.K_DOWN:
-                        self.current_map_ind = (self.current_map_ind + 1) % self.maps_count
-                        self._reload()
-                    if event.key == pygame.K_RIGHT:
-                        if self.current_turn == self.simul.analitics.max_turn - 1:
-                            self._reload()
-                        else:
-                            self.current_turn = self.current_turn + 1
-                        line = self._get_turn_movement(self.current_turn)
-                        if line:
-                            print(line)
-                    if event.key == pygame.K_LEFT:
-                        self.current_turn = self.current_turn - 1 if self.current_turn > 0 else 0
-                        line = self._get_turn_movement(self.current_turn)
-                        if line:
-                            print(line)
-                    if event.key == pygame.K_r:
-                        self._reload()
-            screen_surface.fill(color="grey38")
+                    self.execute_event(event)
+            self.screen_surface.fill(color="grey38")
             pygame.draw.rect(
-                screen_surface,
+                self.screen_surface,
                 "grey48",
-                (0, MAP_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT), 0, 10,)
+                (0, MAP_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT), 0, 10)
             for conn in self.simul.connections.values():
                 start = self._to_screen(conn.hub_1.coord_x, conn.hub_1.coord_y)
                 end = self._to_screen(conn.hub_2.coord_x, conn.hub_2.coord_y)
-                pygame.draw.line(screen_surface, conn.color, start, end)
-            for hub in self.simul.hubs.values():
-                surface = pygame.Surface((HUB_SIZE, HUB_SIZE))
-                try:
-                    surface.fill(hub.color if hub.color else "white")
-                except ValueError:
-                    surface.fill("springgreen3")
-                hub_rec = surface.get_frect()
-                hub_rec.center = self._to_screen(hub.coord_x, hub.coord_y)
-                screen_surface.blit(surface, hub_rec)
-
-                name_surf, zone_type_surf = self.hub_text_cache[hub.name]
-                name_rec = name_surf.get_frect()
-                name_rec.center = (hub_rec.midbottom[0],
-                                   hub_rec.midbottom[1] + 10)
-                screen_surface.blit(name_surf, name_rec)
-                zone_type_rec = zone_type_surf.get_frect()
-                zone_type_rec.center = (name_rec.midbottom[0],
-                                        name_rec.midbottom[1] + 15)
-                screen_surface.blit(zone_type_surf, zone_type_rec)
-            for dron, dron_rec in self.drones.items():
-                screen_surface.blit(scaled_dron, dron_rec)
-                if self.current_turn < len(dron.steps) and self.current_turn >= 0:
-                    next_x, next_y = self._to_screen(
-                        dron.steps[self.current_turn].location.coord_x,
-                        dron.steps[self.current_turn].location.coord_y)
-                    next = pygame.math.Vector2((next_x, next_y))
-                    current = pygame.math.Vector2(
-                        dron_rec.center).move_towards(next, self.speed)
-                    dron_rec.center = current
+                pygame.draw.line(self.screen_surface, conn.color, start, end)
+            self.draw_hubs()
+            self.draw_drones()
             pygame.display.update()
         pygame.quit()

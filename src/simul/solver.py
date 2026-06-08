@@ -85,7 +85,10 @@ class Solver:
             [len(steps) for steps in paths.values()])
         return Analytics(max_turn, min_turn)
 
-    def _find_path(self, drone_id: str, simul: Simulation, reserv_map: ReservationMap) -> List[Node]:
+    def _find_path(self,
+                   drone_id: str,
+                   simul: Simulation,
+                   reserv_map: ReservationMap) -> List[Node]:
         possible_steps: List[Node] = []
         path: List[Node] = []
         heuristics = self._calculate_heuristics(simul)
