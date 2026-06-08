@@ -7,9 +7,53 @@ import pygame
 WINDOW_WIDTH = 1700
 WINDOW_HEIGHT = 900
 MAP_HEIGHT = WINDOW_HEIGHT * 0.75
+ACTUAL_FOOTER_HEIGHT = WINDOW_HEIGHT - MAP_HEIGHT
 PADDING = 60
+FOOTER_PADDING = 20
 HUB_SIZE = 40
 DRON_SIZE = 35
+
+
+class Footer:
+    def __init__(self, simul: Simulation) -> None:
+        self.font = pygame.font.Font(size=40)
+        self.footer_rect = pygame.rect.FRect(
+            0, MAP_HEIGHT, WINDOW_WIDTH, ACTUAL_FOOTER_HEIGHT)
+        self._draw_control_panel()
+        self.update_map_name(simul.name)
+        self._update_drones_count(len(simul.drones))
+
+    def update_map_name(self, new_name: str) -> None:
+        self.map_name = new_name
+        self.map_name_surf = self.font.render(self.map_name, True, "yellow")
+        self.map_name_rect = self.map_name_surf.get_rect()
+        self.map_name_rect.midtop = (
+            self.footer_rect.midtop[0],
+            self.footer_rect.midtop[1] + FOOTER_PADDING)
+
+    def _draw_control_panel(self) -> None:
+        font = pygame.font.Font(size=30)
+        next_prev_map_msg = "[ up | down ]  -  next | prev map"
+        next_prev_turn_msg = "[ left | right ]  -  next | prev turn"
+        speed_msg = "[ 1 2 3 ]  -  speed"
+        restart_msg = "[ R ]  -  restart"
+        space_msg = "[ SPACE ]  -  auto play"
+        control_panel_msg = (f"{next_prev_turn_msg}\n{next_prev_map_msg}\n"
+                             f"{space_msg}\n{restart_msg}\n{speed_msg}")
+        self.control_panel_surf = font.render(
+            control_panel_msg, True, "yellow")
+        self.control_panel_rect = self.control_panel_surf.get_rect()
+        self.control_panel_rect.midbottom = (
+            self.footer_rect.midbottom[0],
+            self.footer_rect.midbottom[1] - FOOTER_PADDING)
+
+    def _update_drones_count(self, count: int) -> None:
+        self.drones_count_surf = self.font.render(
+            f"drones count: {count}", True, "yellow")
+        self.drones_count_rect = self.drones_count_surf.get_frect()
+        self.drones_count_rect.topleft = (
+            self.footer_rect.topleft[0] + FOOTER_PADDING,
+            self.footer_rect.topleft[1] + FOOTER_PADDING)
 
 
 class Visualizer:
@@ -57,11 +101,11 @@ class Visualizer:
         return line
 
     def _update_hub_text_cache(self) -> None:
-        font = pygame.font.Font(size=12)
         hub_text_cache: Dict[str, Tuple[pygame.Surface, pygame.Surface]] = {}
         for name, hub in self.simul.hubs.items():
-            name_surf = font.render(name, True, "white")
-            zone_type_surf = font.render(hub.zone_type.value, True, "white")
+            name_surf = self.hub_text_font.render(name, True, "white")
+            zone_type_surf = self.hub_text_font.render(
+                hub.zone_type.value, True, "white")
             hub_text_cache[name] = (name_surf, zone_type_surf)
         self.hub_text_cache = hub_text_cache
 
@@ -74,11 +118,13 @@ class Visualizer:
     def _reload(self) -> None:
         self.simul = self.simulations[self.current_map_ind]
         self.current_turn = 0
+        self.footer.update_map_name(self.simul.name)
         self._compute_scale()
         self._update_hub_text_cache()
         self._create_drones()
+        print()
 
-    def execute_event(self, event: pygame.event.Event) -> None:
+    def _execute_event(self, event: pygame.event.Event) -> None:
         if event.key == pygame.K_UP:
             self.current_map_ind = (
                 self.current_map_ind - 1 if self.current_map_ind > 0 else 0)
@@ -103,7 +149,7 @@ class Visualizer:
         if event.key == pygame.K_r:
             self._reload()
 
-    def draw_hubs(self) -> None:
+    def _draw_hubs(self) -> None:
         for hub in self.simul.hubs.values():
             surface = pygame.Surface((HUB_SIZE, HUB_SIZE))
             try:
@@ -124,7 +170,7 @@ class Visualizer:
                                     name_rec.midbottom[1] + 15)
             self.screen_surface.blit(zone_type_surf, zone_type_rec)
 
-    def draw_drones(self) -> None:
+    def _draw_drones(self) -> None:
         for dron, dron_rec in self.drones.items():
             self.screen_surface.blit(self.scaled_dron, dron_rec)
             if (self.current_turn < len(dron.steps)
@@ -144,6 +190,8 @@ class Visualizer:
         self.screen_surface = pygame.display.set_mode(
             (WINDOW_WIDTH, WINDOW_HEIGHT))
         pygame.display.set_caption("FLY-IN")
+        self.hub_text_font = pygame.font.Font(size=12)
+        self.footer = Footer(self.simul)
         self._update_hub_text_cache()
         dron = pygame.image.load("images/player.png")
         self.scaled_dron = pygame.transform.scale(
@@ -157,17 +205,20 @@ class Visualizer:
                 if event.type == pygame.QUIT:
                     running = False
                 if event.type == pygame.KEYDOWN:
-                    self.execute_event(event)
+                    self._execute_event(event)
             self.screen_surface.fill(color="grey38")
-            pygame.draw.rect(
-                self.screen_surface,
-                "grey48",
-                (0, MAP_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT), 0, 10)
+            self.screen_surface.fill("black", self.footer.footer_rect)
+            self.screen_surface.blit(
+                self.footer.map_name_surf, self.footer.map_name_rect)
+            self.screen_surface.blit(self.footer.control_panel_surf,
+                                     self.footer.control_panel_rect)
+            self.screen_surface.blit(self.footer.drones_count_surf,
+                                     self.footer.drones_count_rect)
             for conn in self.simul.connections.values():
                 start = self._to_screen(conn.hub_1.coord_x, conn.hub_1.coord_y)
                 end = self._to_screen(conn.hub_2.coord_x, conn.hub_2.coord_y)
                 pygame.draw.line(self.screen_surface, conn.color, start, end)
-            self.draw_hubs()
-            self.draw_drones()
+            self._draw_hubs()
+            self._draw_drones()
             pygame.display.update()
         pygame.quit()
