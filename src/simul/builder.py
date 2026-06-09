@@ -1,8 +1,9 @@
-from src.parser.models import ParsedElement, ParsedHub, ParsedConnection
+from src.parser.models import ParsedElement, ParsedHub, ParsedConnection, ParsedNbDrones
 from src.cli import AppConfig
-from .models import Simulation, Hub, Connection, Drone
+from .models import Simulation, Hub, Connection, Drone, Analytics
 from src.domain import HubKind
 from typing import List, Dict
+from .errors import SimulationError
 
 
 class SimulationBuilder:
@@ -37,9 +38,13 @@ class SimulationBuilder:
             parsed_els, hubs)
         start = [hub for hub in hubs.values() if hub.kind == HubKind.START][0]
         end = [hub for hub in hubs.values() if hub.kind == HubKind.END][0]
-        start.max_capacity = parsed_els[0].drones_count
-        end.max_capacity = parsed_els[0].drones_count
-        drones = [Drone(i) for i in range(1, parsed_els[0].drones_count + 1)]
+        if not isinstance(parsed_els[0], ParsedNbDrones):
+            raise SimulationError("First parsed element must be instance of "
+                                  "ParsedNbDrones class")
+        nb_drones = parsed_els[0].drones_count
+        start.max_capacity = nb_drones
+        end.max_capacity = nb_drones
+        drones = [Drone(i) for i in range(1, nb_drones + 1)]
         return Simulation(
             name=map_name,
             start_hub=start,
@@ -47,7 +52,7 @@ class SimulationBuilder:
             hubs=hubs,
             connections=connections,
             drones=drones,
-            analitics=None)
+            analitics=Analytics())
 
     def build_simul_map(
             self,

@@ -104,7 +104,7 @@ class Visualizer:
         self.max_x = max(hub.coord_x for hub in self.simul.hubs.values())
         self.max_y = max(hub.coord_y for hub in self.simul.hubs.values())
 
-    def _to_screen(self, x: int, y: int) -> Tuple[int, int]:
+    def _to_screen(self, x: float, y: float) -> Tuple[int, int]:
         range_x = (self.max_x - self.min_x)
         range_y = (self.max_y - self.min_y)
         if range_x == 0:
@@ -113,7 +113,7 @@ class Visualizer:
             new_x = int((x - self.min_x) / range_x *
                         (WINDOW_WIDTH - 2 * PADDING) + PADDING)
         if range_y == 0:
-            new_y = MAP_HEIGHT // 2
+            new_y = int(MAP_HEIGHT // 2)
         else:
             new_y = int((y - self.min_y) / range_y *
                         (MAP_HEIGHT - 2 * PADDING) + PADDING)
@@ -125,7 +125,7 @@ class Visualizer:
             if turn > 0 and turn < len(drone.steps):
                 if drone.steps[turn - 1] == drone.steps[turn]:
                     continue
-                line = f"{line} {drone.steps[turn].movement_str}"
+                line = f"{line} {drone.id}-{drone.steps[turn].name}"
         return line
 
     def _update_hub_text_cache(self) -> None:
@@ -242,8 +242,8 @@ class Visualizer:
             if (self.current_turn < len(dron.steps)
                and self.current_turn >= 0):
                 next_x, next_y = self._to_screen(
-                    dron.steps[self.current_turn].hub.coord_x,
-                    dron.steps[self.current_turn].hub.coord_y)
+                    dron.steps[self.current_turn].coord_x,
+                    dron.steps[self.current_turn].coord_y)
                 next = pygame.math.Vector2((next_x, next_y))
                 current = pygame.math.Vector2(dron_rect.center).move_towards(
                     next, self.speed * self.distance)

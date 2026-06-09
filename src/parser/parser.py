@@ -165,7 +165,7 @@ class MapParser:
     def _validate(self, parsed_els: List[ParsedElement]) -> None:
         if not isinstance(parsed_els[0], ParsedNbDrones):
             raise ParserError("First map element must be nb_drones", 0)
-        hubs: Dict[str: ParsedElement] = {}
+        hubs: Dict[str, ParsedElement] = {}
         connections: Set[ParsedConnection] = set()
         start_hubs = 0
         end_hubs = 0

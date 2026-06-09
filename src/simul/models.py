@@ -1,5 +1,6 @@
 from src.parser import ParsedHub
 from typing import List, Dict, Any
+from .errors import SimulationError
 from dataclasses import dataclass
 
 
@@ -7,8 +8,8 @@ class Hub:
     def __init__(self, parsed_hub: ParsedHub) -> None:
         self.name = parsed_hub.name
         self.kind = parsed_hub.kind
-        self.coord_x = parsed_hub.coord_x
-        self.coord_y = parsed_hub.coord_y
+        self.coord_x = float(parsed_hub.coord_x)
+        self.coord_y = float(parsed_hub.coord_y)
         self.zone_type = parsed_hub.meta.zone
         self.color = parsed_hub.meta.color
         self.max_capacity = parsed_hub.meta.max_drones
@@ -52,6 +53,8 @@ class Connection:
             return self.hub_2
         elif hub == self.hub_2:
             return self.hub_1
+        raise SimulationError(
+            f"Unknown hub {hub.name} for connection {self.name}")
 
     def __hash__(self) -> int:
         return hash(self.name)
@@ -66,16 +69,16 @@ class Connection:
 
 class Node:
     def __init__(self,
-                 hub: Hub,
+                 location: Hub,
                  turn: int,
                  drone_id: str,
                  h_cost: float, t_cost: int) -> None:
-        self.hub = hub
+        self.location = location
         self.turn = turn
         self.h_cost = h_cost
         self.t_cost = t_cost
         self.f_cost = float(t_cost) + h_cost
-        self.movement_str = f"{drone_id}-{hub.name}"
+        self.movement_str = f"{drone_id}-{location.name}"
 
     def __lt__(self, other: "Node") -> bool:
         if self.f_cost == other.f_cost:
@@ -83,10 +86,10 @@ class Node:
         return self.f_cost < other.f_cost
 
     def __eq__(self, value: Any) -> bool:
-        return isinstance(value, Node) and self.hub == value.hub
+        return isinstance(value, Node) and self.location == value.location
 
     def __repr__(self) -> str:
-        return (f"Hub: {self.hub.name} "
+        return (f"Location: {self.location.name} "
                 f"Turn: {self.turn} "
                 f"h_cost: {self.h_cost} "
                 f"t_cost: {self.t_cost} "
@@ -97,7 +100,7 @@ class Node:
 class Drone:
     def __init__(self, id: int) -> None:
         self.id = f"D{id}"
-        self.steps: List[Node] = []
+        self.steps: List[Hub | Connection] = []
 
     def __eq__(self, value: Any) -> bool:
         return isinstance(value, Drone) and value.id == self.id
@@ -108,9 +111,9 @@ class Drone:
 
 @dataclass
 class Analytics:
-    max_turn: int
-    min_turn: int
-    drones_count: int
+    max_turn: int = 0
+    min_turn: int = 0
+    drones_count: int = 0
 
 
 @dataclass
