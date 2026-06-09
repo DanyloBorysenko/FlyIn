@@ -14,7 +14,7 @@ def build_app_config(argv: list[str]) -> AppConfig:
                    or arg.startswith(Flag.PLAYLIST_PATH.value)):
                     raise AppConfigError("Using '=' is allowed only "
                                          f"with '{Flag.MAP_PATH.value}'"
-                                         f" and '{Flag.PLAYLIST_PATH}'")
+                                         f" and '{Flag.PLAYLIST_PATH.value}'")
                 key, val = arg.split("=", maxsplit=1)
             else:
                 key, val = arg, True
