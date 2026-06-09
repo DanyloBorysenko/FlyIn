@@ -1,4 +1,5 @@
-from src.parser.models import ParsedElement, ParsedHub, ParsedConnection, ParsedNbDrones
+from src.parser.models import (ParsedElement, ParsedHub,
+                               ParsedConnection, ParsedNbDrones)
 from src.cli import AppConfig
 from .models import Simulation, Hub, Connection, Drone, Analytics
 from src.domain import HubKind

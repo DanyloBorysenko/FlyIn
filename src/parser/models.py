@@ -69,10 +69,10 @@ class ParsedHub(ParsedElement):
             raise ParserError("Zone name can not contain '-'", self.line_ind)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ConnectionMetadata:
     line_ind: int
-    max_link_capacity: int = 1
+    max_link_capacity: int
 
     def __post_init__(self) -> None:
         if self.max_link_capacity < 1:

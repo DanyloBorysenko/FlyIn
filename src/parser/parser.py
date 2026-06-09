@@ -57,27 +57,34 @@ class MapParser:
                         meta_els: List[str],
                         line_ind: int) -> HubMetadata:
         str_meta: Dict[str, str] = self._get_meta_dict(meta_els, line_ind)
-        meta = {"line_ind": line_ind}
+        zone_type_val: ZoneType = ZoneType.NORMAL
+        color_val: str | None = None
+        max_drones_val: int = 1
         for key, val in str_meta.items():
             try:
-                key = ZoneMetaKey(key)
+                zone_meta_key = ZoneMetaKey(key)
             except ValueError:
                 raise ParserError(f"Unknown meta key '{key}'",
                                   line_ind)
-            if key == ZoneMetaKey.ZONE:
+            if zone_meta_key == ZoneMetaKey.ZONE:
                 try:
-                    val = ZoneType(val)
+                    zone_type_val = ZoneType(val)
                 except ValueError:
                     raise ParserError(f"Unknown zone type '{val}'",
                                       line_ind)
-            elif key == ZoneMetaKey.MAX_DRONES:
+            elif zone_meta_key == ZoneMetaKey.MAX_DRONES:
                 try:
-                    val = int(val)
+                    max_drones_val = int(val)
                 except ValueError:
                     raise ParserError(f"Value '{val}' must be integer.",
                                       line_ind)
-            meta[key.value] = val
-        return HubMetadata(**meta)
+            else:
+                color_val = val
+        return HubMetadata(
+            line_ind=line_ind,
+            zone=zone_type_val,
+            color=color_val,
+            max_drones=max_drones_val)
 
     def _parse_connection(self,
                           line_els: List[str],
@@ -92,7 +99,7 @@ class MapParser:
         if len(line_els) > 2:
             meta = self._parse_connection_meta(line_els[2:], line_ind)
         else:
-            meta = ConnectionMetadata(line_ind=line_ind)
+            meta = ConnectionMetadata(line_ind=line_ind, max_link_capacity=1)
         return (ParsedConnection(line_ind=line_ind, zone1=zone1_zone2[0],
                                  zone2=zone1_zone2[1], meta=meta))
 
@@ -100,21 +107,22 @@ class MapParser:
                                meta_els: List[str],
                                line_ind: int) -> ConnectionMetadata:
         str_meta = self._get_meta_dict(meta_els, line_ind)
-        meta = {"line_ind": line_ind}
+        capacity = 1
         for key, val in str_meta.items():
             try:
-                key = ConnectionMetaKey(key)
+                ConnectionMetaKey(key)
             except ValueError:
                 raise ParserError(f"Unknown meta key '{key}'.",
                                   line_ind)
             try:
-                val = int(val)
+                capacity = int(val)
             except ValueError:
-                raise ParserError(f"Value for the key {key.value} "
+                raise ParserError(f"Value for the key {key} "
                                   f"must be integer, but was {val}.",
                                   line_ind)
-            meta[key.value] = val
-        return ConnectionMetadata(**meta)
+        return ConnectionMetadata(
+            line_ind=line_ind,
+            max_link_capacity=capacity)
 
     def _get_meta_dict(self, meta_els: List[str],
                        line_ind: int) -> Dict[str, str]:
