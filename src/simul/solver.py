@@ -1,6 +1,7 @@
-from typing import Dict, Tuple, List, Any
+from typing import Dict, Tuple, List
 from .models import Hub, Connection, Simulation, Node, Analytics
 from src.domain import ZoneType
+from .errors import SimulationError
 import heapq
 
 
@@ -45,7 +46,9 @@ class Solver:
                    or new_cost < heuristics[neighbour]):
                     heuristics[neighbour] = new_cost
                     heapq.heappush(heap, (new_cost, neighbour.name, neighbour))
-        return dict(sorted(heuristics.items(), key=lambda item: item[1]))
+        if simul.start_hub not in heuristics:
+            raise SimulationError(f"End hub is unavailable, map: {simul.name}")
+        return heuristics
 
     def _get_turn_movement(self, turn: int, simul: Simulation) -> str:
         line = ""

@@ -15,7 +15,7 @@ DRON_SIZE = 35
 
 
 class Footer:
-    def __init__(self, simul: Simulation, speed: int) -> None:
+    def __init__(self, simul: Simulation, speed: int, ) -> None:
         self.font = pygame.font.Font(size=40)
         self.info_panel_font = pygame.font.Font(size=30)
         self.footer_rect = pygame.rect.FRect(
@@ -140,6 +140,14 @@ class Visualizer:
     def _create_drones(self) -> None:
         self.dron_rect.center = self._to_screen(
             self.simul.start_hub.coord_x, self.simul.start_hub.coord_y)
+        drones_ids = list()
+        for dron in self.simul.drones:
+            drone_id_surf = self.drone_id_font.render(dron.id, True, "black")
+            drone_id_rect = drone_id_surf.get_frect()
+            drone_id_rect.midbottom = self.dron_rect.midtop
+            drones_ids.append(
+                (dron, self.dron_rect.copy(), drone_id_surf, drone_id_rect))
+        self.drones_ids = drones_ids
         self.drones = {dron: self.dron_rect.copy()
                        for dron in self.simul.drones}
 
@@ -191,6 +199,21 @@ class Visualizer:
             self.speed = 3
             self.footer._update_speed(self.speed)
 
+    def _draw_footer(self) -> None:
+        self.screen_surface.fill("black", self.footer.footer_rect)
+        self.screen_surface.blit(
+            self.footer.map_name_surf, self.footer.map_name_rect)
+        self.screen_surface.blit(self.footer.control_panel_surf,
+                                 self.footer.control_panel_rect)
+        self.screen_surface.blit(self.footer.drones_count_surf,
+                                 self.footer.drones_count_rect)
+        self.screen_surface.blit(self.footer.speed_surf,
+                                 self.footer.speed_rect)
+        self.screen_surface.blit(self.footer.max_turn_surf,
+                                 self.footer.max_turn_rect)
+        self.screen_surface.blit(self.footer.curr_turn_surf,
+                                 self.footer.curr_turn_rect)
+
     def _draw_hubs(self) -> None:
         for hub in self.simul.hubs.values():
             surface = pygame.Surface((HUB_SIZE, HUB_SIZE))
@@ -213,18 +236,19 @@ class Visualizer:
             self.screen_surface.blit(zone_type_surf, zone_type_rec)
 
     def _draw_drones(self) -> None:
-        for dron, dron_rec in self.drones.items():
-            self.screen_surface.blit(self.scaled_dron, dron_rec)
+        for dron, dron_rect, id_surf, id_rect in self.drones_ids:
+            self.screen_surface.blit(id_surf, id_rect)
+            self.screen_surface.blit(self.scaled_dron, dron_rect)
             if (self.current_turn < len(dron.steps)
                and self.current_turn >= 0):
                 next_x, next_y = self._to_screen(
                     dron.steps[self.current_turn].location.coord_x,
                     dron.steps[self.current_turn].location.coord_y)
                 next = pygame.math.Vector2((next_x, next_y))
-                current = pygame.math.Vector2(
-                    dron_rec.center).move_towards(
-                        next, self.speed * self.distance)
-                dron_rec.center = current
+                current = pygame.math.Vector2(dron_rect.center).move_towards(
+                    next, self.speed * self.distance)
+                dron_rect.center = current
+                id_rect.midbottom = dron_rect.midtop
 
     def run(self) -> None:
         pygame.init()
@@ -233,6 +257,7 @@ class Visualizer:
             (WINDOW_WIDTH, WINDOW_HEIGHT))
         pygame.display.set_caption("FLY-IN")
         self.hub_text_font = pygame.font.Font(size=12)
+        self.drone_id_font = pygame.font.Font(size=20)
         self.footer = Footer(self.simul, self.speed)
         self._update_hub_text_cache()
         dron = pygame.image.load("images/player.png")
@@ -249,19 +274,7 @@ class Visualizer:
                 if event.type == pygame.KEYDOWN:
                     self._execute_event(event)
             self.screen_surface.fill(color="grey38")
-            self.screen_surface.fill("black", self.footer.footer_rect)
-            self.screen_surface.blit(
-                self.footer.map_name_surf, self.footer.map_name_rect)
-            self.screen_surface.blit(self.footer.control_panel_surf,
-                                     self.footer.control_panel_rect)
-            self.screen_surface.blit(self.footer.drones_count_surf,
-                                     self.footer.drones_count_rect)
-            self.screen_surface.blit(self.footer.speed_surf,
-                                     self.footer.speed_rect)
-            self.screen_surface.blit(self.footer.max_turn_surf,
-                                     self.footer.max_turn_rect)
-            self.screen_surface.blit(self.footer.curr_turn_surf,
-                                     self.footer.curr_turn_rect)
+            self._draw_footer()
             for conn in self.simul.connections.values():
                 start = self._to_screen(conn.hub_1.coord_x, conn.hub_1.coord_y)
                 end = self._to_screen(conn.hub_2.coord_x, conn.hub_2.coord_y)

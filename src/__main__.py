@@ -23,6 +23,7 @@ def main() -> None:
             solver.show_all_turns(simulations[0])
     except (AppConfigError, ParserError, SimulationError) as e:
         print(f"{e.__class__.__name__}: {e}", file=sys.stderr)
+        sys.exit(1)
     except Exception as e:
         print(f"Unknown error: {e}")
         sys.exit(1)
