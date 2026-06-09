@@ -242,8 +242,8 @@ class Visualizer:
             if (self.current_turn < len(dron.steps)
                and self.current_turn >= 0):
                 next_x, next_y = self._to_screen(
-                    dron.steps[self.current_turn].location.coord_x,
-                    dron.steps[self.current_turn].location.coord_y)
+                    dron.steps[self.current_turn].hub.coord_x,
+                    dron.steps[self.current_turn].hub.coord_y)
                 next = pygame.math.Vector2((next_x, next_y))
                 current = pygame.math.Vector2(dron_rect.center).move_towards(
                     next, self.speed * self.distance)

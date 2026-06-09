@@ -65,16 +65,17 @@ class Connection:
 
 
 class Node:
-    def __init__(self, location: Hub | Connection,
+    def __init__(self,
+                 hub: Hub,
                  turn: int,
                  drone_id: str,
                  h_cost: float, t_cost: int) -> None:
-        self.location = location
+        self.hub = hub
         self.turn = turn
         self.h_cost = h_cost
         self.t_cost = t_cost
         self.f_cost = float(t_cost) + h_cost
-        self.movement_str = f"{drone_id}-{location.name}"
+        self.movement_str = f"{drone_id}-{hub.name}"
 
     def __lt__(self, other: "Node") -> bool:
         if self.f_cost == other.f_cost:
@@ -82,10 +83,10 @@ class Node:
         return self.f_cost < other.f_cost
 
     def __eq__(self, value: Any) -> bool:
-        return isinstance(value, Node) and self.location == value.location
+        return isinstance(value, Node) and self.hub == value.hub
 
     def __repr__(self) -> str:
-        return (f"Location: {self.location.name} "
+        return (f"Hub: {self.hub.name} "
                 f"Turn: {self.turn} "
                 f"h_cost: {self.h_cost} "
                 f"t_cost: {self.t_cost} "

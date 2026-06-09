@@ -72,10 +72,10 @@ class Solver:
                 path: List[Node] = self._find_path(drone.id, simul, reserv_map)
                 drone.steps.extend(path)
                 for turn, node in enumerate(path[1:-1], 1):
-                    if isinstance(node.location, Hub):
-                        reserv_map.reserve_hub(node.location, turn)
+                    if isinstance(node.hub, Hub):
+                        reserv_map.reserve_hub(node.hub, turn)
                     else:
-                        reserv_map.reserve_loc(node.location, turn)
+                        reserv_map.reserve_loc(node.hub, turn)
             simul.analitics = self.get_simul_analitics(simul)
 
     def get_simul_analitics(self, simul: Simulation) -> Analytics:
@@ -98,38 +98,44 @@ class Solver:
         path: List[Node] = []
         heuristics = self._calculate_heuristics(simul)
         first_node = Node(
-            location=simul.start_hub,
+            hub=simul.start_hub,
             turn=0,
             drone_id=drone_id,
             h_cost=heuristics[simul.start_hub],
             t_cost=0)
         heapq.heappush(possible_steps, first_node)
         while possible_steps:
-            current = heapq.heappop(possible_steps)
-            curr_location = current.location
-            if curr_location.zone_type == ZoneType.RESTRICTED:
-                for conn in curr_location.connections:
-                    if curr_location.name in conn.name and path[-1].location.name in conn.name:
-                        mid_conn_step = Node(conn, current.turn - 1, drone_id, current.h_cost, current.t_cost)
+            current_node = heapq.heappop(possible_steps)
+            curr_hub = current_node.hub
+            if curr_hub.zone_type == ZoneType.RESTRICTED:
+                for conn in curr_hub.connections:
+                    if (curr_hub.name in conn.name
+                       and path[-1].hub.name in conn.name):
+                        mid_conn_step = Node(
+                            conn,
+                            current_node.turn - 1,
+                            drone_id,
+                            current_node.h_cost,
+                            current_node.t_cost)
                         path.append(mid_conn_step)
-            path.append(current)
-            if curr_location == simul.end_hub:
+            path.append(current_node)
+            if curr_hub == simul.end_hub:
                 return path
             possible_steps.clear()
-            for conn in curr_location.connections:
-                neighbour = conn.get_oposssite(curr_location)
+            for conn in curr_hub.connections:
+                neighbour = conn.get_oposssite(curr_hub)
                 if neighbour.zone_type == ZoneType.BLOCKED:
                     continue
                 step_cost = 2 if (
                     neighbour.zone_type == ZoneType.RESTRICTED) else 1
-                next_turn = current.turn + step_cost
+                next_turn = current_node.turn + step_cost
                 if neighbour != simul.end_hub:
                     hub_ocup = reserv_map.show_hub_occupancy(
                         neighbour, next_turn)
                     if hub_ocup >= neighbour.max_capacity:
                         continue
                 conn_ocup = reserv_map.show_conn_occupancy(
-                    conn, current.turn + 1)
+                    conn, current_node.turn + 1)
                 if conn_ocup >= conn.max_capacity:
                     continue
                 possible_step = Node(
@@ -137,19 +143,19 @@ class Solver:
                     next_turn,
                     drone_id,
                     heuristics[neighbour],
-                    current.t_cost + step_cost)
+                    current_node.t_cost + step_cost)
                 heapq.heappush(possible_steps, possible_step)
             next_ocup = reserv_map.show_hub_occupancy(
-                curr_location, current.turn + 1
+                curr_hub, current_node.turn + 1
             )
-            if (curr_location == simul.start_hub
-               or next_ocup <= curr_location.max_capacity):
+            if (curr_hub == simul.start_hub
+               or next_ocup <= curr_hub.max_capacity):
                 wait_step = Node(
-                    curr_location,
-                    current.turn + 1,
+                    curr_hub,
+                    current_node.turn + 1,
                     drone_id,
-                    heuristics[curr_location],
-                    current.turn + 1
+                    heuristics[curr_hub],
+                    current_node.turn + 1
                 )
                 heapq.heappush(possible_steps, wait_step)
         return []
