@@ -100,6 +100,7 @@ class Visualizer:
         self.turn_duration = 1.0
         self.turn_progress = 0.0
         self.auto_play = False
+        self.running = False
 
     def _compute_scale(self) -> None:
         self.min_x = min(hub.coord_x for hub in self.simul.hubs.values())
@@ -175,6 +176,9 @@ class Visualizer:
             self.current_map_ind = (self.current_map_ind + 1) % self.maps_count
             self._reload()
         if event.key == pygame.K_RIGHT:
+            if self.running:
+                return
+            self.running = True
             self.turn_progress = 0.0
             if self.current_turn == self.simul.analitics.max_turn:
                 self._reload()
@@ -185,6 +189,9 @@ class Visualizer:
             if line:
                 print(line)
         if event.key == pygame.K_LEFT:
+            if self.running:
+                return
+            self.running = True
             self.turn_progress = 0.0
             self.current_turn = (
                 self.current_turn - 1 if self.current_turn > 0 else 0)
@@ -205,12 +212,7 @@ class Visualizer:
                 self.speed += self.speed_step
                 self.footer._update_speed(self.speed)
         if event.key == pygame.K_SPACE:
-            if not self.auto_play:
-                self.auto_play = not self.auto_play
-                self.turn_progress = 0.0
-                self.current_turn += 1
-                self.footer._update_curr_turn(self.current_turn)
-                print(self._get_turn_movement(self.current_turn))
+            self.auto_play = True
 
     def _draw_footer(self) -> None:
         self.screen_surface.fill("black", self.footer.footer_rect)
@@ -248,22 +250,25 @@ class Visualizer:
                                     name_rec.midbottom[1] + 15)
             self.screen_surface.blit(zone_type_surf, zone_type_rec)
 
-    def _draw_drones(self, delta_time: float) -> None:
+    def _draw_drones(self) -> None:
         for dron, dron_rect, id_surf, id_rect in self.drones_ids:
             self.screen_surface.blit(id_surf, id_rect)
             self.screen_surface.blit(self.scaled_dron, dron_rect)
-            if (self.current_turn < len(dron.steps)
-               and self.current_turn >= 0):
-                next_x, next_y = self._to_screen(
-                    dron.steps[self.current_turn].coord_x,
-                    dron.steps[self.current_turn].coord_y)
-                current = pygame.math.Vector2(dron_rect.center)
-                target = pygame.math.Vector2((next_x, next_y))
-                distance = current.distance_to(target)
+            if self.current_turn >= len(dron.steps) or self.current_turn < 0:
+                continue
+            next_x, next_y = self._to_screen(
+                dron.steps[self.current_turn].coord_x,
+                dron.steps[self.current_turn].coord_y)
+            current = pygame.math.Vector2(dron_rect.center)
+            target = pygame.math.Vector2((next_x, next_y))
+            distance = current.distance_to(target)
+            if self.turn_progress >= self.turn_duration:
+                current = target
+            else:
                 speed = distance / (self.turn_duration - self.turn_progress)
-                current = current.move_towards(target, speed * delta_time)
-                dron_rect.center = current
-                id_rect.midbottom = dron_rect.midtop
+                current = current.move_towards(target, speed * self.dt)
+            dron_rect.center = current
+            id_rect.midbottom = dron_rect.midtop
 
     def run(self) -> None:
         pygame.init()
@@ -282,7 +287,7 @@ class Visualizer:
         self._create_drones()
         running = True
         while running:
-            dt = clock.tick(60) / 1000
+            self.dt = clock.tick(60) / 1000
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
@@ -295,14 +300,10 @@ class Visualizer:
                 end = self._to_screen(conn.hub_2.coord_x, conn.hub_2.coord_y)
                 pygame.draw.line(self.screen_surface, conn.color, start, end)
             self._draw_hubs()
-            self._draw_drones(dt)
-            self.turn_progress += dt
-            # if (self.auto_play
-            #    and self.turn_progress > self.current_turn * self.turn_duration):
-            #     self.current_turn = self.current_turn + 1
-            #     self.footer._update_curr_turn(self.current_turn)
-            #     line = self._get_turn_movement(self.current_turn)
-            #     if line:
-            #         print(line)
+            self._draw_drones()
+            if self.running:
+                self.turn_progress += self.dt
+            if self.turn_progress >= self.turn_duration:
+                self.running = False
             pygame.display.update()
         pygame.quit()
