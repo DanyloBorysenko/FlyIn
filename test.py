@@ -1,6 +1,7 @@
 import subprocess
 import os
 from pathlib import Path
+import math
 
 
 INVALID_MAPS_DIR = Path("invalid_maps")
@@ -32,9 +33,7 @@ def run_map(map_path: Path) -> None:
 
 
 def main() -> None:
-    ints = [1, 2, 3, 4, 5]
-    for i in ints[1:-1]:
-        print(i)
+    print(math.sqrt(25))
 
 
 if __name__ == "__main__":

@@ -39,7 +39,7 @@ class Footer:
         font = pygame.font.Font(size=30)
         next_prev_map_msg = "[ up | down ]  -  next | prev map"
         next_prev_turn_msg = "[ left | right ]  -  next | prev turn"
-        speed_msg = "[ 1 2 3 ]  -  speed"
+        speed_msg = "[ - | + ]  -  speed"
         restart_msg = "[ R ]  -  restart"
         space_msg = "[ SPACE ]  -  auto play"
         control_panel_msg = (f"{next_prev_turn_msg}\n{next_prev_map_msg}\n"
@@ -59,7 +59,7 @@ class Footer:
             self.footer_rect.topleft[0] + FOOTER_PADDING,
             self.footer_rect.topleft[1] + FOOTER_PADDING * 3)
 
-    def _update_speed(self, value: int) -> None:
+    def _update_speed(self, value: float) -> None:
         self.speed_surf = self.info_panel_font.render(
             f"speed: {value}", True, "yellow")
         self.speed_rect = self.speed_surf.get_frect()
@@ -95,8 +95,11 @@ class Visualizer:
         self.maps_count = len(self.simulations)
         self.simul = simulations[self.current_map_ind]
         self._compute_scale()
-        self.speed = 1
-        self.distance = 2.0
+        self.speed = 1.0
+        self.speed_step = 0.5
+        self.turn_duration = 1.0
+        self.turn_progress = 0.0
+        self.auto_play = False
 
     def _compute_scale(self) -> None:
         self.min_x = min(hub.coord_x for hub in self.simul.hubs.values())
@@ -172,6 +175,7 @@ class Visualizer:
             self.current_map_ind = (self.current_map_ind + 1) % self.maps_count
             self._reload()
         if event.key == pygame.K_RIGHT:
+            self.turn_progress = 0.0
             if self.current_turn == self.simul.analitics.max_turn:
                 self._reload()
             else:
@@ -181,6 +185,7 @@ class Visualizer:
             if line:
                 print(line)
         if event.key == pygame.K_LEFT:
+            self.turn_progress = 0.0
             self.current_turn = (
                 self.current_turn - 1 if self.current_turn > 0 else 0)
             self.footer._update_curr_turn(self.current_turn)
@@ -189,15 +194,23 @@ class Visualizer:
                 print(line)
         if event.key == pygame.K_r:
             self._reload()
-        if event.key == pygame.K_1:
-            self.speed = 1
-            self.footer._update_speed(self.speed)
-        if event.key == pygame.K_2:
-            self.speed = 2
-            self.footer._update_speed(self.speed)
-        if event.key == pygame.K_3:
-            self.speed = 3
-            self.footer._update_speed(self.speed)
+        if event.key == pygame.K_MINUS:
+            if self.speed > 0.5:
+                self.turn_duration = self.turn_duration + self.speed_step
+                self.speed -= self.speed_step
+                self.footer._update_speed(self.speed)
+        if event.key == pygame.K_EQUALS:
+            if self.turn_duration > 0.5:
+                self.turn_duration = self.turn_duration - self.speed_step
+                self.speed += self.speed_step
+                self.footer._update_speed(self.speed)
+        if event.key == pygame.K_SPACE:
+            if not self.auto_play:
+                self.auto_play = not self.auto_play
+                self.turn_progress = 0.0
+                self.current_turn += 1
+                self.footer._update_curr_turn(self.current_turn)
+                print(self._get_turn_movement(self.current_turn))
 
     def _draw_footer(self) -> None:
         self.screen_surface.fill("black", self.footer.footer_rect)
@@ -235,7 +248,7 @@ class Visualizer:
                                     name_rec.midbottom[1] + 15)
             self.screen_surface.blit(zone_type_surf, zone_type_rec)
 
-    def _draw_drones(self) -> None:
+    def _draw_drones(self, delta_time: float) -> None:
         for dron, dron_rect, id_surf, id_rect in self.drones_ids:
             self.screen_surface.blit(id_surf, id_rect)
             self.screen_surface.blit(self.scaled_dron, dron_rect)
@@ -244,9 +257,11 @@ class Visualizer:
                 next_x, next_y = self._to_screen(
                     dron.steps[self.current_turn].coord_x,
                     dron.steps[self.current_turn].coord_y)
-                next = pygame.math.Vector2((next_x, next_y))
-                current = pygame.math.Vector2(dron_rect.center).move_towards(
-                    next, self.speed * self.distance)
+                current = pygame.math.Vector2(dron_rect.center)
+                target = pygame.math.Vector2((next_x, next_y))
+                distance = current.distance_to(target)
+                speed = distance / (self.turn_duration - self.turn_progress)
+                current = current.move_towards(target, speed * delta_time)
                 dron_rect.center = current
                 id_rect.midbottom = dron_rect.midtop
 
@@ -257,7 +272,7 @@ class Visualizer:
             (WINDOW_WIDTH, WINDOW_HEIGHT))
         pygame.display.set_caption("FLY-IN")
         self.hub_text_font = pygame.font.Font(size=12)
-        self.drone_id_font = pygame.font.Font(size=20)
+        self.drone_id_font = pygame.font.Font(size=30)
         self.footer = Footer(self.simul, self.speed)
         self._update_hub_text_cache()
         dron = pygame.image.load("images/player.png")
@@ -267,7 +282,7 @@ class Visualizer:
         self._create_drones()
         running = True
         while running:
-            clock.tick()
+            dt = clock.tick(60) / 1000
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
@@ -280,6 +295,14 @@ class Visualizer:
                 end = self._to_screen(conn.hub_2.coord_x, conn.hub_2.coord_y)
                 pygame.draw.line(self.screen_surface, conn.color, start, end)
             self._draw_hubs()
-            self._draw_drones()
+            self._draw_drones(dt)
+            self.turn_progress += dt
+            # if (self.auto_play
+            #    and self.turn_progress > self.current_turn * self.turn_duration):
+            #     self.current_turn = self.current_turn + 1
+            #     self.footer._update_curr_turn(self.current_turn)
+            #     line = self._get_turn_movement(self.current_turn)
+            #     if line:
+            #         print(line)
             pygame.display.update()
         pygame.quit()
