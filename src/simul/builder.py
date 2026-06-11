@@ -53,7 +53,7 @@ class SimulationBuilder:
             hubs=hubs,
             connections=connections,
             drones=drones,
-            analitics=Analytics())
+            analytics=Analytics())
 
     def build_simul_map(
             self,

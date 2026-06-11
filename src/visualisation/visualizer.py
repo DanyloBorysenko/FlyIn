@@ -15,16 +15,16 @@ DRON_SIZE = 35
 
 
 class Footer:
-    def __init__(self, simul: Simulation, speed: int, ) -> None:
+    def __init__(self, simul: Simulation, speed: float,) -> None:
         self.font = pygame.font.Font(size=40)
         self.info_panel_font = pygame.font.Font(size=30)
         self.footer_rect = pygame.rect.FRect(
             0, MAP_HEIGHT, WINDOW_WIDTH, ACTUAL_FOOTER_HEIGHT)
         self._draw_control_panel()
         self.update_map_name(simul.name)
-        self._update_drones_count(simul.analitics.drones_count)
+        self._update_drones_count(simul.analytics.drones_count)
         self._update_speed(speed)
-        self._update_max_turn(simul.analitics.max_turn)
+        self._update_max_turn(simul.analytics.max_turn)
         self._update_curr_turn(0)
 
     def update_map_name(self, new_name: str) -> None:
@@ -123,15 +123,6 @@ class Visualizer:
                         (MAP_HEIGHT - 2 * PADDING) + PADDING)
         return new_x, new_y
 
-    def _get_turn_movement(self, turn: int) -> str:
-        line = ""
-        for drone in self.simul.drones:
-            if turn > 0 and turn < drone.steps_count:
-                if drone.steps[turn - 1] == drone.steps[turn]:
-                    continue
-                line = f"{line} {drone.id}-{drone.steps[turn].name}"
-        return line
-
     def _update_hub_text_cache(self) -> None:
         hub_text_cache: Dict[str, Tuple[pygame.Surface, pygame.Surface]] = {}
         for name, hub in self.simul.hubs.items():
@@ -161,8 +152,8 @@ class Visualizer:
         self.footer.update_map_name(self.simul.name)
         self._compute_scale()
         self._update_hub_text_cache()
-        self.footer._update_drones_count(self.simul.analitics.drones_count)
-        self.footer._update_max_turn(self.simul.analitics.max_turn)
+        self.footer._update_drones_count(self.simul.analytics.drones_count)
+        self.footer._update_max_turn(self.simul.analytics.max_turn)
         self.footer._update_curr_turn(0)
         self._create_drones()
         self.auto_play = False
@@ -180,22 +171,17 @@ class Visualizer:
             if self.running:
                 return
             self.running = True
-            if self.current_turn == self.simul.analitics.max_turn:
+            if self.current_turn == self.simul.analytics.max_turn:
                 self._reload()
             else:
                 self.current_turn += 1
                 self.footer._update_curr_turn(self.current_turn)
-            line = self._get_turn_movement(self.current_turn)
-            if line:
-                print(line)
+            print(self.simul.analytics.turns_output[self.current_turn - 1])
         if event.key == pygame.K_LEFT:
             if not self.running and self.current_turn > 0:
                 self.running = True
                 self.current_turn -= 1
                 self.footer._update_curr_turn(self.current_turn)
-                line = self._get_turn_movement(self.current_turn)
-                if line:
-                    print(line)
         if event.key == pygame.K_r:
             self._reload()
         if event.key == pygame.K_MINUS:
@@ -212,15 +198,13 @@ class Visualizer:
             if (
                not self.auto_play and
                not self.running and
-               self.current_turn < self.simul.analitics.max_turn
+               self.current_turn < self.simul.analytics.max_turn
                ):
                 self.auto_play = True
                 self.running = True
                 self.current_turn += 1
                 self.footer._update_curr_turn(self.current_turn)
-                line = self._get_turn_movement(self.current_turn)
-                if line:
-                    print(line)
+                print(self.simul.analytics.turns_output[self.current_turn - 1])
 
     def _draw_footer(self) -> None:
         self.screen_surface.fill("black", self.footer.footer_rect)
@@ -316,14 +300,14 @@ class Visualizer:
                     self.running = False
                     self.turn_progress = 0.0
                 else:
-                    if self.current_turn >= self.simul.analitics.max_turn:
+                    if self.current_turn >= self.simul.analytics.max_turn:
                         self.auto_play = False
                     else:
                         self.turn_progress = 0.0
                         self.current_turn += 1
                         self.footer._update_curr_turn(self.current_turn)
-                        line = self._get_turn_movement(self.current_turn)
-                        if line:
-                            print(line)
+                        print(
+                            self.simul.analytics.turns_output[
+                                self.current_turn - 1])
             pygame.display.update()
         pygame.quit()

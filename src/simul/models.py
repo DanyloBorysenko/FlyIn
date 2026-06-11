@@ -1,7 +1,7 @@
 from src.parser import ParsedHub
 from typing import List, Dict, Any
 from .errors import SimulationError
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 class Hub:
@@ -115,6 +115,7 @@ class Analytics:
     max_turn: int = 0
     min_turn: int = 0
     drones_count: int = 0
+    turns_output: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -125,7 +126,7 @@ class Simulation:
     hubs: Dict[str, Hub]
     connections: Dict[str, Connection]
     drones: List[Drone]
-    analitics: Analytics
+    analytics: Analytics
 
     def __repr__(self) -> str:
         return (f"\nStart hub: {self.start_hub}\n"

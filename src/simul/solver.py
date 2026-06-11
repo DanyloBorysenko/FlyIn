@@ -51,19 +51,20 @@ class Solver:
         return heuristics
 
     def _get_turn_movement(self, turn: int, simul: Simulation) -> str:
-        line = ""
+        movements = []
         for drone in simul.drones:
-            if turn > 0 and turn < len(drone.steps):
-                if drone.steps[turn - 1] == drone.steps[turn]:
-                    continue
-                line = f"{line} {drone.id}-{drone.steps[turn].name}"
-        return line
+            if turn <= 0 or turn >= drone.steps_count:
+                continue
+            if drone.steps[turn - 1] == drone.steps[turn]:
+                continue
+            line = f"{drone.id}-{drone.steps[turn].name}"
+            movements.append(line)
+        return " ".join(movements)
 
     def show_all_turns(self, simul: Simulation) -> None:
         print(f"\nMap: {simul.name}\n")
-        max_turn = simul.analitics.max_turn
-        for turn in range(1, max_turn + 1):
-            print(self._get_turn_movement(turn, simul))
+        max_turn = simul.analytics.max_turn
+        print("\n".join(simul.analytics.turns_output))
         print(f"\nMax turns: {max_turn}")
 
     def solve(self, simulations: List[Simulation]) -> None:
@@ -79,10 +80,11 @@ class Solver:
                         reserv_map.reserve_hub(location, turn)
                     else:
                         reserv_map.reserve_loc(location, turn)
-            simul.analitics = self.get_simul_analitics(simul)
+            simul.analytics = self.get_simul_analytics(simul)
 
-    def get_simul_analitics(self, simul: Simulation) -> Analytics:
+    def get_simul_analytics(self, simul: Simulation) -> Analytics:
         paths: Dict[str, List[Hub | Connection]] = {}
+        turns_output: List[str] = []
         drones_count = 0
         for drone in simul.drones:
             paths[drone.id] = drone.steps
@@ -91,7 +93,10 @@ class Solver:
             [len(steps) for steps in paths.values()])
         min_turn = min(
             [len(steps) for steps in paths.values()])
-        return Analytics(max_turn - 1, min_turn - 1, drones_count)
+        for turn in range(1, max_turn):
+            turns_output.append(self._get_turn_movement(turn, simul))
+        return Analytics(
+            max_turn - 1, min_turn - 1, drones_count, turns_output)
 
     def _find_path(self,
                    drone_id: str,
