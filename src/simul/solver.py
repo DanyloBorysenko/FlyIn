@@ -13,7 +13,7 @@ class ReservationMap:
     def reserve_hub(self, hub: Hub, turn: int) -> None:
         self.nodes[(hub, turn)] = self.nodes.get((hub, turn), 0) + 1
 
-    def reserve_loc(self, connection: Connection, turn: int) -> None:
+    def reserve_conn(self, connection: Connection, turn: int) -> None:
         self.edges[(connection, turn)] = self.edges.get(
             (connection, turn), 0) + 1
 
@@ -79,7 +79,7 @@ class Solver:
                     if isinstance(location, Hub):
                         reserv_map.reserve_hub(location, turn)
                     else:
-                        reserv_map.reserve_loc(location, turn)
+                        reserv_map.reserve_conn(location, turn)
             simul.analytics = self.get_simul_analytics(simul)
 
     def get_simul_analytics(self, simul: Simulation) -> Analytics:
@@ -126,7 +126,7 @@ class Solver:
                 return path
             possible_steps.clear()
             for conn in curr_location.connections:
-                neighbour = conn.get_oposssite(curr_location)
+                neighbour = conn.get_opposite(curr_location)
                 if neighbour.zone_type == ZoneType.BLOCKED:
                     continue
                 step_cost = 2 if (

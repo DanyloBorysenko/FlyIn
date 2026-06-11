@@ -48,7 +48,7 @@ class Connection:
         self.max_capacity = capacity
         self.nb_drones = 0
 
-    def get_oposssite(self, hub: Hub) -> Hub:
+    def get_opposite(self, hub: Hub) -> Hub:
         if hub == self.hub_1:
             return self.hub_2
         elif hub == self.hub_2:
@@ -81,6 +81,7 @@ class Node:
         self.movement_str = f"{drone_id}-{location.name}"
 
     def __lt__(self, other: "Node") -> bool:
+        return self.h_cost < other.h_cost
         if self.f_cost == other.f_cost:
             return self.t_cost > other.t_cost
         return self.f_cost < other.f_cost
