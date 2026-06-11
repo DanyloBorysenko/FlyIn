@@ -101,6 +101,7 @@ class Drone:
     def __init__(self, id: int) -> None:
         self.id = f"D{id}"
         self.steps: List[Hub | Connection] = []
+        self.steps_count: int = 0
 
     def __eq__(self, value: Any) -> bool:
         return isinstance(value, Drone) and value.id == self.id

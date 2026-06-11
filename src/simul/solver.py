@@ -73,6 +73,7 @@ class Solver:
                 path: List[Hub | Connection] = self._find_path(
                     drone.id, simul, reserv_map)
                 drone.steps.extend(path)
+                drone.steps_count = len(path)
                 for turn, location in enumerate(path[1:-1], 1):
                     if isinstance(location, Hub):
                         reserv_map.reserve_hub(location, turn)
