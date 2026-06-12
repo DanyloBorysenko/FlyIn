@@ -1,0 +1,62 @@
+# Challenger Level 4: The Grandmaster (Chessboard Grid Topology)
+# Testing extreme combinatorial pathing and swarm synchronization
+nb_drones: 16
+
+# --- THE BOARD (4x4 Grid) ---
+# Start and End Hubs
+start_hub: a1 0 0 [color=green max_drones=16]
+end_hub: d4 3 3 [color=green max_drones=16]
+
+# "Light Squares": Restricted & Slow (Max 2 drones, takes 2 turns to cross)
+hub: b1 1 0 [zone=restricted color=red max_drones=2]
+hub: d1 3 0 [zone=restricted color=red max_drones=2]
+hub: a2 0 1 [zone=restricted color=red max_drones=2]
+hub: c2 2 1 [zone=restricted color=red max_drones=2]
+hub: b3 1 2 [zone=restricted color=red max_drones=2]
+hub: d3 3 2 [zone=restricted color=red max_drones=2]
+hub: a4 0 3 [zone=restricted color=red max_drones=2]
+hub: c4 2 3 [zone=restricted color=red max_drones=2]
+
+# "Dark Squares": Priority & Fast (Max 4 drones, takes 1 turn to cross)
+hub: c1 2 0 [zone=priority color=cyan max_drones=4]
+hub: b2 1 1 [zone=priority color=cyan max_drones=4]
+hub: d2 3 1 [zone=priority color=cyan max_drones=4]
+hub: a3 0 2 [zone=priority color=cyan max_drones=4]
+hub: c3 2 2 [zone=priority color=cyan max_drones=4]
+hub: b4 1 3 [zone=priority color=cyan max_drones=4]
+
+
+# --- THE MOVES (Orthogonal Grid Connections) ---
+# Horizontal Ranks
+connection: a1-b1 [max_link_capacity=2]
+connection: b1-c1 [max_link_capacity=2]
+connection: c1-d1 [max_link_capacity=2]
+
+connection: a2-b2 [max_link_capacity=2]
+connection: b2-c2 [max_link_capacity=2]
+connection: c2-d2 [max_link_capacity=2]
+
+connection: a3-b3 [max_link_capacity=2]
+connection: b3-c3 [max_link_capacity=2]
+connection: c3-d3 [max_link_capacity=2]
+
+connection: a4-b4 [max_link_capacity=2]
+connection: b4-c4 [max_link_capacity=2]
+connection: c4-d4 [max_link_capacity=2]
+
+# Vertical Files
+connection: a1-a2 [max_link_capacity=2]
+connection: a2-a3 [max_link_capacity=2]
+connection: a3-a4 [max_link_capacity=2]
+
+connection: b1-b2 [max_link_capacity=2]
+connection: b2-b3 [max_link_capacity=2]
+connection: b3-b4 [max_link_capacity=2]
+
+connection: c1-c2 [max_link_capacity=2]
+connection: c2-c3 [max_link_capacity=2]
+connection: c3-c4 [max_link_capacity=2]
+
+connection: d1-d2 [max_link_capacity=2]
+connection: d2-d3 [max_link_capacity=2]
+connection: d3-d4 [max_link_capacity=2]

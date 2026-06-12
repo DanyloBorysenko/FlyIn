@@ -53,19 +53,14 @@ class Node:
                  location: Hub,
                  turn: int,
                  drone_id: str,
-                 h_cost: float, t_cost: int) -> None:
+                 h_cost: float) -> None:
         self.location = location
         self.turn = turn
         self.h_cost = h_cost
-        self.t_cost = t_cost
-        self.f_cost = float(t_cost) + h_cost
         self.movement_str = f"{drone_id}-{location.name}"
 
     def __lt__(self, other: "Node") -> bool:
         return self.h_cost < other.h_cost
-        # if self.f_cost == other.f_cost:
-        #     return self.t_cost > other.t_cost
-        # return self.f_cost < other.f_cost
 
     def __eq__(self, value: Any) -> bool:
         return isinstance(value, Node) and self.location == value.location
@@ -74,8 +69,6 @@ class Node:
         return (f"Location: {self.location.name} "
                 f"Turn: {self.turn} "
                 f"h_cost: {self.h_cost} "
-                f"t_cost: {self.t_cost} "
-                f"f_cost: {self.f_cost} "
                 f"Movement: {self.movement_str} ")
 
 

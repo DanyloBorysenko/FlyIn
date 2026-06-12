@@ -1,0 +1,62 @@
+# CHALLENGER LEVEL: THE PARALLEL ARTERIES
+# Focus: Heuristic Weighting and Traffic Jam Management
+nb_drones: 30
+
+# === Staging Area (The Swarm gathers) ===
+start_hub: start 0 0 [color=green max_drones=30]
+hub: stage_n 1 1 [color=cyan max_drones=5]
+hub: stage_s 1 -1 [color=cyan max_drones=5]
+hub: stage_c 2 0 [color=blue max_drones=5]
+
+# === Artery 1: The Restricted Needle (Short but brutal) ===
+hub: art1_a 4 3 [zone=restricted color=darkred max_drones=1]
+hub: art1_b 6 3 [zone=restricted color=darkred max_drones=1]
+hub: art1_c 8 3 [zone=restricted color=darkred max_drones=1]
+
+# === Artery 2: The Priority Highway (Long but fast) ===
+hub: art2_a 3 -3 [zone=priority color=gold max_drones=4]
+hub: art2_b 4 -4 [zone=priority color=gold max_drones=4]
+hub: art2_c 5 -5 [zone=priority color=gold max_drones=4]
+hub: art2_d 6 -5 [zone=priority color=gold max_drones=4]
+hub: art2_e 7 -4 [zone=priority color=gold max_drones=4]
+hub: art2_f 8 -3 [zone=priority color=gold max_drones=4]
+
+# === Receiving Area (The Swarm arrives) ===
+hub: recv_n 10 1 [color=cyan max_drones=5]
+hub: recv_s 10 -1 [color=cyan max_drones=5]
+hub: recv_c 9 0 [color=blue max_drones=5]
+end_hub: goal 11 0 [color=orange max_drones=30]
+
+# === CONNECTIONS ===
+# Staging Connections
+connection: start-stage_n
+connection: start-stage_s
+connection: start-stage_c
+connection: stage_n-stage_c
+connection: stage_s-stage_c
+
+# Bridging to Arteries
+connection: stage_n-art1_a [max_link_capacity=1]
+connection: stage_s-art2_a
+
+# Artery 1 Internal (Bottlenecks)
+connection: art1_a-art1_b [max_link_capacity=1]
+connection: art1_b-art1_c [max_link_capacity=1]
+
+# Artery 2 Internal (High Volume)
+connection: art2_a-art2_b [max_link_capacity=4]
+connection: art2_b-art2_c [max_link_capacity=4]
+connection: art2_c-art2_d [max_link_capacity=4]
+connection: art2_d-art2_e [max_link_capacity=4]
+connection: art2_e-art2_f [max_link_capacity=4]
+
+# Reconnecting to Receiver
+connection: art1_c-recv_n [max_link_capacity=1]
+connection: art2_f-recv_s
+
+# Receiving Area Internal
+connection: recv_n-recv_c
+connection: recv_s-recv_c
+connection: recv_n-goal
+connection: recv_s-goal
+connection: recv_c-goal

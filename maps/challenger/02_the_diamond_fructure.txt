@@ -1,0 +1,63 @@
+# CHALLENGER LEVEL: THE DIAMOND FRACTURE
+# Focus: Extreme Spatial Diversion and Lateral Detouring
+nb_drones: 25
+
+# === The Origin ===
+start_hub: start 0 0 [color=green max_drones=25]
+
+# === Fracture 1: The Split ===
+hub: f1_center 2 0 [zone=restricted color=darkred max_drones=1]
+hub: f1_north 2 2 [color=blue max_drones=2]
+hub: f1_south 2 -2 [color=blue max_drones=2]
+
+# === Fracture 2: The Wide Expanse ===
+hub: f2_center 5 0 [zone=priority color=gold max_drones=1]
+hub: f2_n1 5 2 [color=blue max_drones=3]
+hub: f2_n2 5 4 [zone=restricted color=purple max_drones=1]
+hub: f2_s1 5 -2 [color=blue max_drones=3]
+hub: f2_s2 5 -4 [zone=restricted color=purple max_drones=1]
+
+# Lateral connectors (allowing lane changes)
+hub: f2_bridge_n 5 3 [color=gray max_drones=1]
+hub: f2_bridge_s 5 -3 [color=gray max_drones=1]
+
+# === Fracture 3: The Contraction ===
+hub: f3_center 8 0 [zone=restricted color=darkred max_drones=1]
+hub: f3_north 8 2 [color=blue max_drones=2]
+hub: f3_south 8 -2 [color=blue max_drones=2]
+
+# === The Convergence ===
+end_hub: goal 10 0 [color=orange max_drones=25]
+
+# === CONNECTIONS ===
+# Expansion
+connection: start-f1_center [max_link_capacity=1]
+connection: start-f1_north
+connection: start-f1_south
+
+# To the Expanse
+connection: f1_center-f2_center [max_link_capacity=1]
+connection: f1_north-f2_n1
+connection: f1_north-f2_n2
+connection: f1_south-f2_s1
+connection: f1_south-f2_s2
+
+# The Expanse Bridges (Vertical movement)
+connection: f2_n2-f2_bridge_n
+connection: f2_bridge_n-f2_n1
+connection: f2_n1-f2_center
+connection: f2_s2-f2_bridge_s
+connection: f2_bridge_s-f2_s1
+connection: f2_s1-f2_center
+
+# Contraction
+connection: f2_center-f3_center [max_link_capacity=1]
+connection: f2_n1-f3_north
+connection: f2_n2-f3_north
+connection: f2_s1-f3_south
+connection: f2_s2-f3_south
+
+# Final Approach
+connection: f3_center-goal [max_link_capacity=1]
+connection: f3_north-goal
+connection: f3_south-goal
