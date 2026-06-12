@@ -22,12 +22,13 @@ class SimulationBuilder:
         connections = {}
         for el in data:
             if isinstance(el, ParsedConnection):
-                conn = Connection(
-                    hubs[el.zone1],
-                    hubs[el.zone2],
-                    el.meta.max_link_capacity)
-                hubs[conn.hub_1.name].connections.append(conn)
-                hubs[conn.hub_2.name].connections.append(conn)
+                hub1 = hubs[el.zone1]
+                hub2 = hubs[el.zone2]
+                conn = Connection(hub1, hub2, el.meta.max_link_capacity)
+                hub1.connections.append(conn)
+                hub2.connections.append(conn)
+                hub1.neighbours.update({hub2: conn})
+                hub2.neighbours.update({hub1: conn})
                 connections[conn.name] = conn
         return connections
 
@@ -43,10 +44,12 @@ class SimulationBuilder:
             raise SimulationError("First parsed element must be instance of "
                                   "ParsedNbDrones class")
         nb_drones = parsed_els[0].drones_count
+        if nb_drones > 100:
+            raise SimulationError(f"Too much drones, map: {map_name}")
         start.max_capacity = nb_drones
         end.max_capacity = nb_drones
         drones = [Drone(i) for i in range(1, nb_drones + 1)]
-        return Simulation(
+        simul = Simulation(
             name=map_name,
             start_hub=start,
             end_hub=end,
@@ -54,6 +57,9 @@ class SimulationBuilder:
             connections=connections,
             drones=drones,
             analytics=Analytics())
+        if self.app.debug:
+            print(f"Simul was built: {simul}")
+        return simul
 
     def build_simul_map(
             self,

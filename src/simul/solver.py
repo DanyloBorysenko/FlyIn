@@ -38,7 +38,7 @@ class Solver:
         heap = [(0.0, end.name, end)]
         while heap:
             cost, _, hub = heapq.heappop(heap)
-            for neighbour in hub.get_neighbours():
+            for neighbour in hub.neighbours.keys():
                 if neighbour.zone_type == ZoneType.BLOCKED:
                     continue
                 new_cost = cost + self.zone_priorities[hub.zone_type]
@@ -75,11 +75,18 @@ class Solver:
                     drone.id, simul, reserv_map)
                 drone.steps.extend(path)
                 drone.steps_count = len(path)
-                for turn, location in enumerate(path[1:-1], 1):
-                    if isinstance(location, Hub):
-                        reserv_map.reserve_hub(location, turn)
+                for turn, current_loc in enumerate(path[1:-1], 1):
+                    if isinstance(current_loc, Connection):
+                        reserv_map.reserve_conn(current_loc, turn)
+                        reserv_map.reserve_conn(current_loc, turn + 1)
                     else:
-                        reserv_map.reserve_conn(location, turn)
+                        reserv_map.reserve_hub(current_loc, turn)
+                        prev_loc = path[turn - 1]
+                        if (prev_loc == current_loc or
+                           isinstance(prev_loc, Connection)):
+                            continue
+                        reserv_map.reserve_conn(
+                            current_loc.neighbours[prev_loc], turn)
             simul.analytics = self.get_simul_analytics(simul)
 
     def get_simul_analytics(self, simul: Simulation) -> Analytics:
@@ -116,17 +123,14 @@ class Solver:
             current_node = heapq.heappop(possible_steps)
             curr_location = current_node.location
             if curr_location.zone_type == ZoneType.RESTRICTED:
-                for conn in curr_location.connections:
-                    if (curr_location.name in conn.name
-                       and path[-1].name in conn.name):
-                        path.append(conn)
-                        break
+                prev_loc = path[-1]
+                if isinstance(prev_loc, Hub):
+                    path.append(curr_location.neighbours[prev_loc])
             path.append(current_node.location)
             if curr_location == simul.end_hub:
                 return path
             possible_steps.clear()
-            for conn in curr_location.connections:
-                neighbour = conn.get_opposite(curr_location)
+            for neighbour, conn in curr_location.neighbours.items():
                 if neighbour.zone_type == ZoneType.BLOCKED:
                     continue
                 step_cost = 2 if (

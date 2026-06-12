@@ -2,7 +2,7 @@ UV := uv
 SRC := src
 DEB := pdb
 PY := $(UV) run python3
-ARGS ?= --map-path=maps/easy/01_linear_path.txt
+ARGS ?= --map-path=maps/easy/01_linear_path.txt --visual
 
 install: .venv/.installed
 

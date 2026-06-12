@@ -1,6 +1,5 @@
 from src.parser import ParsedHub
 from typing import List, Dict, Any
-from .errors import SimulationError
 from dataclasses import dataclass, field
 
 
@@ -15,17 +14,7 @@ class Hub:
         self.max_capacity = parsed_hub.meta.max_drones
         self.nb_drones = 0
         self.connections: List["Connection"] = []
-
-    def get_neighbours(self) -> List["Hub"]:
-        neighbours = []
-        for conn in self.connections:
-            hub1 = conn.hub_1
-            hub2 = conn.hub_2
-            if self == hub1:
-                neighbours.append(hub2)
-            elif self == hub2:
-                neighbours.append(hub1)
-        return neighbours
+        self.neighbours: Dict["Hub", Connection] = {}
 
     def __repr__(self) -> str:
         return f"Hub: {self.name}"
@@ -47,14 +36,6 @@ class Connection:
         self.color = "black"
         self.max_capacity = capacity
         self.nb_drones = 0
-
-    def get_opposite(self, hub: Hub) -> Hub:
-        if hub == self.hub_1:
-            return self.hub_2
-        elif hub == self.hub_2:
-            return self.hub_1
-        raise SimulationError(
-            f"Unknown hub {hub.name} for connection {self.name}")
 
     def __hash__(self) -> int:
         return hash(self.name)
@@ -82,9 +63,9 @@ class Node:
 
     def __lt__(self, other: "Node") -> bool:
         return self.h_cost < other.h_cost
-        if self.f_cost == other.f_cost:
-            return self.t_cost > other.t_cost
-        return self.f_cost < other.f_cost
+        # if self.f_cost == other.f_cost:
+        #     return self.t_cost > other.t_cost
+        # return self.f_cost < other.f_cost
 
     def __eq__(self, value: Any) -> bool:
         return isinstance(value, Node) and self.location == value.location
