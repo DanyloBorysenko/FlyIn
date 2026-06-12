@@ -115,7 +115,6 @@ class Solver:
         first_node = Node(
             location=simul.start_hub,
             turn=0,
-            drone_id=drone_id,
             h_cost=heuristics[simul.start_hub])
         heapq.heappush(possible_steps, first_node)
         while possible_steps:
@@ -147,7 +146,6 @@ class Solver:
                 possible_step = Node(
                     neighbour,
                     next_turn,
-                    drone_id,
                     heuristics[neighbour])
                 heapq.heappush(possible_steps, possible_step)
             next_ocup = reserv_map.show_hub_occupancy(
@@ -158,7 +156,7 @@ class Solver:
                 wait_step = Node(
                     curr_location,
                     current_node.turn + 1,
-                    drone_id,
-                    heuristics[curr_location])
+                    heuristics[curr_location]
+                )
                 heapq.heappush(possible_steps, wait_step)
         return []

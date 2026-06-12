@@ -52,12 +52,10 @@ class Node:
     def __init__(self,
                  location: Hub,
                  turn: int,
-                 drone_id: str,
                  h_cost: float) -> None:
         self.location = location
         self.turn = turn
         self.h_cost = h_cost
-        self.movement_str = f"{drone_id}-{location.name}"
 
     def __lt__(self, other: "Node") -> bool:
         return self.h_cost < other.h_cost
