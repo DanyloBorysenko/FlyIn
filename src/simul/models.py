@@ -66,8 +66,7 @@ class Node:
     def __repr__(self) -> str:
         return (f"Location: {self.location.name} "
                 f"Turn: {self.turn} "
-                f"h_cost: {self.h_cost} "
-                f"Movement: {self.movement_str} ")
+                f"h_cost: {self.h_cost} ")
 
 
 class Drone:

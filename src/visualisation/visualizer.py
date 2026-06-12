@@ -45,7 +45,7 @@ class Footer:
         control_panel_msg = (f"{next_prev_turn_msg}\n{next_prev_map_msg}\n"
                              f"{space_msg}\n{restart_msg}\n{speed_msg}")
         self.control_panel_surf = font.render(
-            control_panel_msg, True, "yellow")
+            control_panel_msg, True, "gold")
         self.control_panel_rect = self.control_panel_surf.get_rect()
         self.control_panel_rect.midbottom = (
             self.footer_rect.midbottom[0],
@@ -53,7 +53,7 @@ class Footer:
 
     def _update_drones_count(self, count: int) -> None:
         self.drones_count_surf = self.info_panel_font.render(
-            f"drones count: {count}", True, "yellow")
+            f"drones count: {count}", True, "gold")
         self.drones_count_rect = self.drones_count_surf.get_frect()
         self.drones_count_rect.topleft = (
             self.footer_rect.topleft[0] + FOOTER_PADDING,
@@ -61,7 +61,7 @@ class Footer:
 
     def _update_speed(self, value: float) -> None:
         self.speed_surf = self.info_panel_font.render(
-            f"speed: {value}", True, "yellow")
+            f"speed: {value}", True, "gold")
         self.speed_rect = self.speed_surf.get_frect()
         self.speed_rect.topleft = (
             self.drones_count_rect.bottomleft[0],
@@ -69,7 +69,7 @@ class Footer:
 
     def _update_max_turn(self, value: int) -> None:
         self.max_turn_surf = self.info_panel_font.render(
-            f"MAX TURN: {value}", True, "yellow")
+            f"MAX TURN: {value}", True, "gold")
         self.max_turn_rect = self.max_turn_surf.get_frect()
         self.max_turn_rect.topleft = (
             self.speed_rect.bottomleft[0],
@@ -77,7 +77,7 @@ class Footer:
 
     def _update_curr_turn(self, value: int) -> None:
         self.curr_turn_surf = self.info_panel_font.render(
-            f"CURRENT TURN: {value}", True, "yellow")
+            f"CURRENT TURN: {value}", True, "gold")
         self.curr_turn_rect = self.curr_turn_surf.get_frect()
         self.curr_turn_rect.topleft = (
             self.max_turn_rect.bottomleft[0],
