@@ -162,7 +162,7 @@ class Solver:
                     current_node.turn + 1,
                     drone_id,
                     heuristics[curr_location],
-                    current_node.turn + 1
+                    current_node.t_cost + 1
                 )
                 heapq.heappush(possible_steps, wait_step)
         return []

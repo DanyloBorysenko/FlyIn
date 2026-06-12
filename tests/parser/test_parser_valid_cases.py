@@ -61,7 +61,8 @@ def test_full_metadata() -> None:
         map_path="tests/parser/valid_maps/full_metadata.txt"
     )
 
-    actual = MapParser(app).parse_map("tests/parser/valid_maps/full_metadata.txt")
+    actual = MapParser(app).parse_map(
+        "tests/parser/valid_maps/full_metadata.txt")
 
     expected = [
         ParsedNbDrones(
@@ -153,7 +154,8 @@ def test_full_metadata() -> None:
             zone2="goal",
             meta=ConnectionMetadata(
                 line_ind=10,
-            ),
+                max_link_capacity=1
+            )
         ),
     ]
 

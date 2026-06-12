@@ -99,7 +99,7 @@ class MapParser:
         if len(line_els) > 2:
             meta = self._parse_connection_meta(line_els[2:], line_ind)
         else:
-            meta = ConnectionMetadata(line_ind=line_ind, max_link_capacity=1)
+            meta = ConnectionMetadata(line_ind=line_ind)
         return (ParsedConnection(line_ind=line_ind, zone1=zone1_zone2[0],
                                  zone2=zone1_zone2[1], meta=meta))
 

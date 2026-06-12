@@ -72,7 +72,7 @@ class ParsedHub(ParsedElement):
 @dataclass(frozen=True, kw_only=True)
 class ConnectionMetadata:
     line_ind: int
-    max_link_capacity: int
+    max_link_capacity: int = 1
 
     def __post_init__(self) -> None:
         if self.max_link_capacity < 1:
