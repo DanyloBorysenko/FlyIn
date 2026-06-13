@@ -152,4 +152,5 @@ Its primary uses included:
  - Reviewing and analyzing existing code to identify bugs, design issues, and potential improvements.
  - Discussing pathfinding algorithms and routing strategies.
  - Improving code readability and maintainability through refactoring suggestions.
-- Drafting and structuring this README.md
+ - Writing docs for the Visualizer class
+ - Drafting and structuring this README.md
