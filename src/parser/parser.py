@@ -10,12 +10,14 @@ from pathlib import Path
 
 
 class MapParser:
+    """Parse map files into validated map elements."""
     def __init__(self, app: AppConfig) -> None:
         self.app = app
 
     def _parse_nb_drones(self,
                          line_els: List[str],
                          line_ind: int) -> ParsedNbDrones:
+        """Parse a drone count declaration."""
         if (len(line_els) < 2):
             raise ParserError("No drones count", line_ind)
         try:
@@ -28,6 +30,7 @@ class MapParser:
     def _parse_hub(self,
                    line_els: List[str],
                    line_ind: int) -> ParsedElement:
+        """Parse a hub declaration."""
         if len(line_els) < 4:
             raise ParserError("Hub needs 4 line elements min. "
                               f"Was {len(line_els)}", line_ind)
@@ -56,6 +59,7 @@ class MapParser:
     def _parse_hub_meta(self,
                         meta_els: List[str],
                         line_ind: int) -> HubMetadata:
+        """Parse hub metadata."""
         str_meta: Dict[str, str] = self._get_meta_dict(meta_els, line_ind)
         zone_type_val: ZoneType = ZoneType.NORMAL
         color_val: str | None = None
@@ -89,6 +93,7 @@ class MapParser:
     def _parse_connection(self,
                           line_els: List[str],
                           line_ind: int) -> ParsedElement:
+        """Parse a connection declaration."""
         if len(line_els) < 2:
             raise ParserError("Connection needs 2 line elements min. "
                               f"Was {len(line_els)}.", line_ind)
@@ -106,6 +111,7 @@ class MapParser:
     def _parse_connection_meta(self,
                                meta_els: List[str],
                                line_ind: int) -> ConnectionMetadata:
+        """Parse connection metadata."""
         str_meta = self._get_meta_dict(meta_els, line_ind)
         capacity = 1
         for key, val in str_meta.items():
@@ -126,10 +132,17 @@ class MapParser:
 
     def _get_meta_dict(self, meta_els: List[str],
                        line_ind: int) -> Dict[str, str]:
+        """
+        Parse metadata tokens into a key-value dictionary.
+
+        Raises:
+            ParserError: If the metadata syntax is invalid.
+        """
         if not meta_els[0].startswith("["):
             raise ParserError("Metadata must start with '['.", line_ind)
         if not meta_els[-1].endswith("]"):
             raise ParserError("Metadata must end with ']'.", line_ind)
+        meta_els = meta_els.copy()
         meta_els[0] = meta_els[0].removeprefix("[")
         meta_els[-1] = meta_els[-1].removesuffix("]")
         meta = {}
@@ -146,6 +159,18 @@ class MapParser:
     def _get_parsed_keyword(self,
                             line_ind: int,
                             line_els: List[str]) -> ParsedElement:
+        """
+        Call appropriate parsing function depending on first line token
+        Args:
+            line_ind: index of the line
+            line_els: list of words from the line, that was splited by space.
+        Returns:
+            ParsedElement
+        Raises:
+            ParserError:
+                If the first word of the line does not have ':' in the end.
+                If the first word of the line is not defined in ParsedKeyword
+        """
         first_key = line_els[0]
         if not first_key.endswith(":"):
             raise ParserError(f"First keyword '{first_key}' must end with ':'",
@@ -171,6 +196,15 @@ class MapParser:
                           "defined zones", line_ind)
 
     def _validate(self, parsed_els: List[ParsedElement]) -> None:
+        """
+        Validate parsed map elements.
+
+        Ensure the map contains exactly one start hub and one end hub,
+        that hub names are unique, and that all connections reference
+        previously defined hubs.
+        Raise:
+            ParserError
+        """
         if not isinstance(parsed_els[0], ParsedNbDrones):
             raise ParserError("First map element must be nb_drones", 0)
         hubs: Dict[str, ParsedElement] = {}
@@ -204,6 +238,15 @@ class MapParser:
                               f"got {end_hubs}")
 
     def parse_map(self, map_path: str) -> List[ParsedElement]:
+        """
+        Parse and validate a map file.
+        Args:
+            map_path: Path to the map file.
+        Returns:
+            Parsed map elements in file order.
+        Raises:
+            ParserError: If the file cannot be read, parsed, or validated.
+        """
         try:
             with open(map_path, "r") as f:
                 lines = f.readlines()
@@ -228,15 +271,25 @@ class MapParser:
     def parse_maps(
             self,
             root_path: str) -> Dict[str, List[ParsedElement]]:
+        """
+        Parse all maps in the configured playlist.
+        Args:
+            root_path: Root directory containing map files.
+        Returns:
+            Mapping of file paths to parsed map elements.
+        Raises:
+            ParserError: If a map or directory cannot be processed.
+        """
         root = Path(root_path)
         map_provided = Path(self.app.map_path)
         if not map_provided.exists():
             raise ParserError(f"file '{map_provided}' doesn't exist")
         if not root.exists():
             raise ParserError(f"dir '{root}' doesn't exist")
+        maps: Dict[str, List[ParsedElement]] = {}
         playlist = root.rglob("*")
         if root not in map_provided.parents:
-            return {str(map_provided): self.parse_map(str(map_provided))}
+            maps.update({str(map_provided): self.parse_map(str(map_provided))})
         order = {
             "easy": 1,
             "medium": 2,
@@ -248,7 +301,6 @@ class MapParser:
             order.get(f.parent.name, 0),
             f.name)
             )
-        maps: Dict[str, List[ParsedElement]] = {}
         for map_file in sorted_files:
             name = str(map_file)
             try:

@@ -41,7 +41,7 @@ class Solver:
             for neighbour in hub.neighbours.keys():
                 if neighbour.zone_type == ZoneType.BLOCKED:
                     continue
-                new_cost = cost + self.zone_priorities[hub.zone_type]
+                new_cost = cost + self.zone_priorities[neighbour.zone_type]
                 if (neighbour not in heuristics
                    or new_cost < heuristics[neighbour]):
                     heuristics[neighbour] = new_cost
@@ -63,16 +63,17 @@ class Solver:
 
     def show_all_turns(self, simul: Simulation) -> None:
         print(f"\nMap: {simul.name}\n")
-        max_turn = simul.analytics.max_turn
         print("\n".join(simul.analytics.turns_output))
+        max_turn = simul.analytics.max_turn
         print(f"\nMax turns: {max_turn}")
 
     def solve(self, simulations: List[Simulation]) -> None:
         for simul in simulations:
             reserv_map = ReservationMap()
+            heuristics = self._calculate_heuristics(simul)
             for drone in simul.drones:
                 path: List[Hub | Connection] = self._find_path(
-                    drone.id, simul, reserv_map)
+                    drone.id, simul, reserv_map, heuristics)
                 drone.steps.extend(path)
                 drone.steps_count = len(path)
                 for turn, current_loc in enumerate(path[1:-1], 1):
@@ -108,10 +109,10 @@ class Solver:
     def _find_path(self,
                    drone_id: str,
                    simul: Simulation,
-                   reserv_map: ReservationMap) -> List[Hub | Connection]:
+                   reserv_map: ReservationMap,
+                   heuristics: Dict[Hub, float]) -> List[Hub | Connection]:
         possible_steps: List[Node] = []
         path: List[Hub | Connection] = []
-        heuristics = self._calculate_heuristics(simul)
         first_node = Node(
             location=simul.start_hub,
             turn=0,

@@ -1,11 +1,12 @@
-from src.parser import MapParser
-from src.cli import AppConfig
+from src.parser import ParsedConnection
+from src.parser.models import ConnectionMetadata
 
 
 def main():
-    a = 1
-    b = a + 1
-    print(b)
+    meta = ConnectionMetadata(line_ind=1)
+    conn1 = ParsedConnection(line_ind=1, zone1="start", zone2="hub1", meta=meta)
+    conn2 = ParsedConnection(line_ind=1, zone1="hub1", zone2="start", meta=meta)
+    print(conn1 == conn2)
 
 
 if __name__ == "__main__":
