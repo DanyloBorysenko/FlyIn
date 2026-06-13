@@ -15,7 +15,8 @@ DRON_SIZE = 35
 
 
 class Footer:
-    def __init__(self, simul: Simulation, speed: float,) -> None:
+    """Render and manage the visualizer footer panel."""
+    def __init__(self, simul: Simulation, speed: float) -> None:
         self.font = pygame.font.Font(size=40)
         self.info_panel_font = pygame.font.Font(size=30)
         self.footer_rect = pygame.rect.FRect(
@@ -28,6 +29,7 @@ class Footer:
         self._update_curr_turn(0)
 
     def update_map_name(self, new_name: str) -> None:
+        """Update the displayed map name."""
         self.map_name = new_name
         self.map_name_surf = self.font.render(self.map_name, True, "yellow")
         self.map_name_rect = self.map_name_surf.get_rect()
@@ -36,6 +38,7 @@ class Footer:
             self.footer_rect.midtop[1] + FOOTER_PADDING)
 
     def _draw_control_panel(self) -> None:
+        """Create the control panel displaying available key bindings."""
         font = pygame.font.Font(size=30)
         next_prev_map_msg = "[ up | down ]  -  next | prev map"
         next_prev_turn_msg = "[ left | right ]  -  next | prev turn"
@@ -52,6 +55,7 @@ class Footer:
             self.footer_rect.midbottom[1] - FOOTER_PADDING)
 
     def _update_drones_count(self, count: int) -> None:
+        """Update the displayed drone count."""
         self.drones_count_surf = self.info_panel_font.render(
             f"drones count: {count}", True, "gold")
         self.drones_count_rect = self.drones_count_surf.get_frect()
@@ -60,6 +64,7 @@ class Footer:
             self.footer_rect.topleft[1] + FOOTER_PADDING * 3)
 
     def _update_speed(self, value: float) -> None:
+        """Update the displayed playback speed."""
         self.speed_surf = self.info_panel_font.render(
             f"speed: {value}", True, "gold")
         self.speed_rect = self.speed_surf.get_frect()
@@ -68,6 +73,7 @@ class Footer:
             self.drones_count_rect.bottomleft[1] + 5)
 
     def _update_max_turn(self, value: int) -> None:
+        """Update the displayed maximum turn number."""
         self.max_turn_surf = self.info_panel_font.render(
             f"MAX TURN: {value}", True, "gold")
         self.max_turn_rect = self.max_turn_surf.get_frect()
@@ -76,6 +82,7 @@ class Footer:
             self.speed_rect.bottomleft[1] + 5)
 
     def _update_curr_turn(self, value: int) -> None:
+        """Update the displayed current turn number."""
         self.curr_turn_surf = self.info_panel_font.render(
             f"CURRENT TURN: {value}", True, "gold")
         self.curr_turn_rect = self.curr_turn_surf.get_frect()
@@ -85,6 +92,7 @@ class Footer:
 
 
 class Visualizer:
+    """Visualize simulations and drone movements using Pygame."""
     def __init__(self,
                  app: AppConfig,
                  simulations: List[Simulation]) -> None:
@@ -103,15 +111,18 @@ class Visualizer:
 
     @property
     def speed(self) -> float:
+        """Return the current playback speed."""
         return 1 / self.turn_duration
 
     def _compute_scale(self) -> None:
+        """Compute coordinate bounds for mapping hubs to screen space."""
         self.min_x = min(hub.coord_x for hub in self.simul.hubs.values())
         self.min_y = min(hub.coord_y for hub in self.simul.hubs.values())
         self.max_x = max(hub.coord_x for hub in self.simul.hubs.values())
         self.max_y = max(hub.coord_y for hub in self.simul.hubs.values())
 
     def _to_screen(self, x: float, y: float) -> Tuple[int, int]:
+        """Convert map coordinates to screen coordinates."""
         range_x = (self.max_x - self.min_x)
         range_y = (self.max_y - self.min_y)
         if range_x == 0:
@@ -127,6 +138,7 @@ class Visualizer:
         return new_x, new_y
 
     def _update_hub_text_cache(self) -> None:
+        """Cache rendered hub labels to avoid repeated rendering."""
         hub_text_cache: Dict[str, Tuple[pygame.Surface, pygame.Surface]] = {}
         for name, hub in self.simul.hubs.items():
             name_surf = self.hub_text_font.render(name, True, "white")
@@ -136,6 +148,7 @@ class Visualizer:
         self.hub_text_cache = hub_text_cache
 
     def _create_drones(self) -> None:
+        """Initialize visual representations of all drones."""
         self.dron_rect.center = self._to_screen(
             self.simul.start_hub.coord_x, self.simul.start_hub.coord_y)
         drones_ids = list()
@@ -150,6 +163,7 @@ class Visualizer:
                        for dron in self.simul.drones}
 
     def _reload(self) -> None:
+        """Reload the currently selected simulation."""
         self.simul = self.simulations[self.current_map_ind]
         self.current_turn = 0
         self.footer.update_map_name(self.simul.name)
@@ -163,16 +177,19 @@ class Visualizer:
         print()
 
     def _next_turn(self) -> None:
+        """Advance the simulation by one turn."""
         if self.current_turn < self.simul.analytics.max_turn:
             self.current_turn += 1
             self.footer._update_curr_turn(self.current_turn)
 
     def _prev_turn(self) -> None:
+        """Move the simulation back by one turn."""
         if self.current_turn > 0:
             self.current_turn -= 1
             self.footer._update_curr_turn(self.current_turn)
 
     def _print_turn(self) -> None:
+        """Print the output associated with the current turn."""
         if self.current_turn > 0:
             print(
                 self.simul.analytics.turns_output[
@@ -181,6 +198,7 @@ class Visualizer:
             )
 
     def _can_start_autoplay(self) -> bool:
+        """Return whether automatic playback can be started."""
         return (
             not self.auto_play
             and not self.animating
@@ -188,6 +206,7 @@ class Visualizer:
         )
 
     def _execute_event(self, event: pygame.event.Event) -> None:
+        """Handle a keyboard input event."""
         if event.key == pygame.K_UP:
             self.current_map_ind = (
                 self.current_map_ind - 1 if self.current_map_ind > 0 else 0)
@@ -224,6 +243,7 @@ class Visualizer:
                 self._print_turn()
 
     def _draw_footer(self) -> None:
+        """Draw the footer and its information panels."""
         self.screen_surface.fill("black", self.footer.footer_rect)
         self.screen_surface.blit(
             self.footer.map_name_surf, self.footer.map_name_rect)
@@ -239,6 +259,7 @@ class Visualizer:
                                  self.footer.curr_turn_rect)
 
     def _draw_hubs(self) -> None:
+        """Draw all hubs and their labels."""
         for hub in self.simul.hubs.values():
             surface = pygame.Surface((HUB_SIZE, HUB_SIZE))
             try:
@@ -260,6 +281,7 @@ class Visualizer:
             self.screen_surface.blit(zone_type_surf, zone_type_rec)
 
     def _draw_drones(self) -> None:
+        """Draw and animate drones for the current turn."""
         for drone, dron_rect, id_surf, id_rect in self.drones_ids:
             self.screen_surface.blit(id_surf, id_rect)
             self.screen_surface.blit(self.scaled_dron, dron_rect)
@@ -280,6 +302,12 @@ class Visualizer:
             id_rect.midbottom = dron_rect.midtop
 
     def run(self) -> None:
+        """
+        Start the visualization loop.
+
+        Handle user input, update animations, and render the
+        current simulation until the window is closed.
+        """
         pygame.init()
         clock = pygame.time.Clock()
         self.screen_surface = pygame.display.set_mode(
