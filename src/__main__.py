@@ -16,7 +16,7 @@ def main() -> None:
         parsed_maps = parser.parse_maps(app_config.playlist_path)
         simulations = SimulationBuilder(app_config).build_simul_map(
             parsed_maps)
-        solver = Solver()
+        solver = Solver(app_config)
         solver.solve(simulations)
         if app_config.visual:
             Visualizer(app_config, simulations).run()

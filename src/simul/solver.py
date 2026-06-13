@@ -2,7 +2,7 @@ from typing import Dict, Tuple, List
 from .models import Hub, Connection, Simulation, Node, Analytics
 from src.domain import ZoneType
 from .errors import SimulationError
-from cli import AppConfig
+from src.cli import AppConfig
 import heapq
 
 
