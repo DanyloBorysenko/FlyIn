@@ -3,8 +3,9 @@ from src.cli import AppConfig
 
 
 def main():
-    parsed = MapParser(AppConfig()).parse_map()
-    print(parsed)
+    a = 1
+    b = a + 1
+    print(b)
 
 
 if __name__ == "__main__":

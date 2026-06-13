@@ -1,5 +1,5 @@
-from .config_builder import build_app_config
+from .config_builder import ConfigBuilder
 from .errors import AppConfigError
 from .models import AppConfig
 
-__all__ = ["build_app_config", "AppConfigError", "AppConfig"]
+__all__ = ["ConfigBuilder", "AppConfigError", "AppConfig"]
