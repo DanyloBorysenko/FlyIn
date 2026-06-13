@@ -8,6 +8,10 @@ from .models import (ParsedElement, ParsedKeyword, ParsedNbDrones, ParsedHub,
 from .errors import ParserError
 from pathlib import Path
 
+META_OPEN_CHAR = "["
+META_CLOSE_CHAR = "]"
+META_DEL = "="
+
 
 class MapParser:
     """Parse map files into validated map elements."""
@@ -138,16 +142,16 @@ class MapParser:
         Raises:
             ParserError: If the metadata syntax is invalid.
         """
-        if not meta_els[0].startswith("["):
+        if not meta_els[0].startswith(META_OPEN_CHAR):
             raise ParserError("Metadata must start with '['.", line_ind)
-        if not meta_els[-1].endswith("]"):
+        if not meta_els[-1].endswith(META_CLOSE_CHAR):
             raise ParserError("Metadata must end with ']'.", line_ind)
         meta_els = meta_els.copy()
-        meta_els[0] = meta_els[0].removeprefix("[")
-        meta_els[-1] = meta_els[-1].removesuffix("]")
+        meta_els[0] = meta_els[0].removeprefix(META_OPEN_CHAR)
+        meta_els[-1] = meta_els[-1].removesuffix(META_CLOSE_CHAR)
         meta = {}
         for el in meta_els:
-            key_val = el.split("=")
+            key_val = el.split(META_DEL)
             if len(key_val) != 2:
                 raise ParserError(f"Wrong meta syntax in '{el}'.", line_ind)
             if key_val[0] in meta:

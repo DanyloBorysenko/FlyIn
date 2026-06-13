@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 
 
 class Hub:
+    """Represents mutable zone object."""
     def __init__(self, parsed_hub: ParsedHub) -> None:
         self.name = parsed_hub.name
         self.kind = parsed_hub.kind
@@ -27,6 +28,7 @@ class Hub:
 
 
 class Connection:
+    """Represents mutable connection object."""
     def __init__(self, hub_1: Hub, hub_2: Hub, capacity: int) -> None:
         self.name = "-".join(sorted([hub_1.name, hub_2.name]))
         self.hub_1 = hub_1
@@ -49,6 +51,7 @@ class Connection:
 
 
 class Node:
+    """Store heuristic, and turn information for every location on the map"""
     def __init__(self,
                  location: Hub,
                  turn: int,
@@ -70,6 +73,7 @@ class Node:
 
 
 class Drone:
+    """Represent mutable dron object"""
     def __init__(self, id: int) -> None:
         self.id = f"D{id}"
         self.steps: List[Hub | Connection] = []
@@ -84,6 +88,7 @@ class Drone:
 
 @dataclass
 class Analytics:
+    """Store statistics and output generated during a simulation."""
     max_turn: int = 0
     min_turn: int = 0
     drones_count: int = 0
@@ -92,6 +97,7 @@ class Analytics:
 
 @dataclass
 class Simulation:
+    """Represent a complete simulation state and its associated data."""
     name: str
     start_hub: Hub
     end_hub: Hub
