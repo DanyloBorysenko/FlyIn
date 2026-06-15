@@ -45,8 +45,6 @@ class SimulationBuilder:
                 hub1 = hubs[el.zone1]
                 hub2 = hubs[el.zone2]
                 conn = Connection(hub1, hub2, el.meta.max_link_capacity)
-                hub1.connections.append(conn)
-                hub2.connections.append(conn)
                 hub1.neighbours.update({hub2: conn})
                 hub2.neighbours.update({hub1: conn})
                 connections[conn.name] = conn

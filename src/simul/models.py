@@ -13,8 +13,6 @@ class Hub:
         self.zone_type = parsed_hub.meta.zone
         self.color = parsed_hub.meta.color
         self.max_capacity = parsed_hub.meta.max_drones
-        self.nb_drones = 0
-        self.connections: List["Connection"] = []
         self.neighbours: Dict["Hub", Connection] = {}
 
     def __repr__(self) -> str:
@@ -37,7 +35,6 @@ class Connection:
         self.coord_y = (hub_1.coord_y + hub_2.coord_y) / 2
         self.color = "black"
         self.max_capacity = capacity
-        self.nb_drones = 0
 
     def __hash__(self) -> int:
         return hash(self.name)
