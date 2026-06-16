@@ -2,7 +2,7 @@ import sys
 from src.cli import AppConfigError, ConfigBuilder
 from src.parser import MapParser, ParserError
 from src.simul import SimulationBuilder, SimulationError
-from src.visualisation.visualizer import Visualizer
+from src.visualisation import Visualizer
 from src.simul import Solver
 
 

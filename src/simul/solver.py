@@ -132,7 +132,8 @@ class Solver:
                             current_loc.neighbours[prev_loc], turn)
             simul.analytics = self.get_simul_analytics(simul, reserv_map)
 
-    def get_simul_analytics(self, simul: Simulation, res_map: ReservationMap) -> Analytics:
+    def get_simul_analytics(
+            self, simul: Simulation, res_map: ReservationMap) -> Analytics:
         """
         Create Analitics object that store information about
         current simulation.
@@ -164,8 +165,10 @@ class Solver:
                 conn, res_turn = reservation[0]
                 nb_drones = reservation[1]
                 if turn == res_turn:
-                    res += f" Connection {conn.name}: {nb_drones}/{conn.max_capacity}"
-            turns_output.append(self._get_turn_movement(turn, simul) + "|" + res)
+                    res += (f" Connection {conn.name}: "
+                            f"{nb_drones}/{conn.max_capacity}")
+            turns_output.append(
+                self._get_turn_movement(turn, simul) + "|" + res)
         return Analytics(
             max_turn - 1, min_turn - 1, drones_count, turns_output)
 

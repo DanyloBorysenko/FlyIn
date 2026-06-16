@@ -2,6 +2,8 @@ from src.parser import ParsedHub
 from typing import List, Dict, Any
 from dataclasses import dataclass, field
 
+CONN_DEFAULT_COLOR = "black"
+
 
 class Hub:
     """Represents mutable zone object."""
@@ -33,7 +35,7 @@ class Connection:
         self.hub_2 = hub_2
         self.coord_x = (hub_1.coord_x + hub_2.coord_x) / 2
         self.coord_y = (hub_1.coord_y + hub_2.coord_y) / 2
-        self.color = "black"
+        self.color = CONN_DEFAULT_COLOR
         self.max_capacity = capacity
 
     def __hash__(self) -> int:

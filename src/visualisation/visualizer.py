@@ -12,6 +12,10 @@ PADDING = 60
 FOOTER_PADDING = 20
 HUB_SIZE = 40
 DRON_SIZE = 35
+HUB_TEXT_COLOR = "white"
+DRONE_ID_COLOR = "black"
+HUB_DEFAULT_COLOR = "springgreen3"
+CONTRL_PANEL_COLOR = "gold"
 
 
 class Footer:
@@ -31,7 +35,8 @@ class Footer:
     def update_map_name(self, new_name: str) -> None:
         """Update the displayed map name."""
         self.map_name = new_name
-        self.map_name_surf = self.font.render(self.map_name, True, "yellow")
+        self.map_name_surf = self.font.render(
+            self.map_name, True, CONTRL_PANEL_COLOR)
         self.map_name_rect = self.map_name_surf.get_rect()
         self.map_name_rect.midtop = (
             self.footer_rect.midtop[0],
@@ -48,7 +53,7 @@ class Footer:
         control_panel_msg = (f"{next_prev_turn_msg}\n{next_prev_map_msg}\n"
                              f"{space_msg}\n{restart_msg}\n{speed_msg}")
         self.control_panel_surf = font.render(
-            control_panel_msg, True, "gold")
+            control_panel_msg, True, CONTRL_PANEL_COLOR)
         self.control_panel_rect = self.control_panel_surf.get_rect()
         self.control_panel_rect.midbottom = (
             self.footer_rect.midbottom[0],
@@ -57,7 +62,7 @@ class Footer:
     def _update_drones_count(self, count: int) -> None:
         """Update the displayed drone count."""
         self.drones_count_surf = self.info_panel_font.render(
-            f"drones count: {count}", True, "gold")
+            f"drones count: {count}", True, CONTRL_PANEL_COLOR)
         self.drones_count_rect = self.drones_count_surf.get_frect()
         self.drones_count_rect.topleft = (
             self.footer_rect.topleft[0] + FOOTER_PADDING,
@@ -66,7 +71,7 @@ class Footer:
     def _update_speed(self, value: float) -> None:
         """Update the displayed playback speed."""
         self.speed_surf = self.info_panel_font.render(
-            f"speed: {value}", True, "gold")
+            f"speed: {value}", True, CONTRL_PANEL_COLOR)
         self.speed_rect = self.speed_surf.get_frect()
         self.speed_rect.topleft = (
             self.drones_count_rect.bottomleft[0],
@@ -75,7 +80,7 @@ class Footer:
     def _update_max_turn(self, value: int) -> None:
         """Update the displayed maximum turn number."""
         self.max_turn_surf = self.info_panel_font.render(
-            f"MAX TURN: {value}", True, "gold")
+            f"MAX TURN: {value}", True, CONTRL_PANEL_COLOR)
         self.max_turn_rect = self.max_turn_surf.get_frect()
         self.max_turn_rect.topleft = (
             self.speed_rect.bottomleft[0],
@@ -84,7 +89,7 @@ class Footer:
     def _update_curr_turn(self, value: int) -> None:
         """Update the displayed current turn number."""
         self.curr_turn_surf = self.info_panel_font.render(
-            f"CURRENT TURN: {value}", True, "gold")
+            f"CURRENT TURN: {value}", True, CONTRL_PANEL_COLOR)
         self.curr_turn_rect = self.curr_turn_surf.get_frect()
         self.curr_turn_rect.topleft = (
             self.max_turn_rect.bottomleft[0],
@@ -141,9 +146,9 @@ class Visualizer:
         """Cache rendered hub labels to avoid repeated rendering."""
         hub_text_cache: Dict[str, Tuple[pygame.Surface, pygame.Surface]] = {}
         for name, hub in self.simul.hubs.items():
-            name_surf = self.hub_text_font.render(name, True, "white")
+            name_surf = self.hub_text_font.render(name, True, HUB_TEXT_COLOR)
             zone_type_surf = self.hub_text_font.render(
-                hub.zone_type.value, True, "white")
+                hub.zone_type.value, True, HUB_TEXT_COLOR)
             hub_text_cache[name] = (name_surf, zone_type_surf)
         self.hub_text_cache = hub_text_cache
 
@@ -153,7 +158,8 @@ class Visualizer:
             self.simul.start_hub.coord_x, self.simul.start_hub.coord_y)
         drones_ids = list()
         for dron in self.simul.drones:
-            drone_id_surf = self.drone_id_font.render(dron.id, True, "black")
+            drone_id_surf = self.drone_id_font.render(
+                dron.id, True, DRONE_ID_COLOR)
             drone_id_rect = drone_id_surf.get_frect()
             drone_id_rect.midbottom = self.dron_rect.midtop
             drones_ids.append(
@@ -265,7 +271,7 @@ class Visualizer:
             try:
                 surface.fill(hub.color if hub.color else "white")
             except ValueError:
-                surface.fill("springgreen3")
+                surface.fill(HUB_DEFAULT_COLOR)
             hub_rec = surface.get_frect()
             hub_rec.center = self._to_screen(hub.coord_x, hub.coord_y)
             self.screen_surface.blit(surface, hub_rec)
