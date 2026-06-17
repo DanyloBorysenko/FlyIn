@@ -91,8 +91,10 @@ class SimulationBuilder:
             self,
             parsed_maps: Dict[str, List[ParsedElement]]
             ) -> List[Simulation]:
-        """Build simulation objects from parsed map data."""
         simulations: List[Simulation] = list()
+        first_simul = self.build_simulation(
+            self.app.map_path, parsed_maps.pop(self.app.map_path))
+        simulations.append(first_simul)
         for map_name, parsed_els in parsed_maps.items():
             simulations.append(self.build_simulation(map_name, parsed_els))
         return simulations
